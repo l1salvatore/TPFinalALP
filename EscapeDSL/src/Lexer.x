@@ -1,5 +1,6 @@
 {
 module Lexer where
+
 }
 
 %wrapper "basic"
@@ -9,41 +10,50 @@ $upper     = [A-Z]
 $lower     = [a-z]
 $alpha     = [A-Za-z]
 $alphanum  = [A-Za-z0-9_]
-$white     = [ \t\n\r]+
+$white     = [\ \t\n\r]
+$stringChar = [^\"\\\n\r]
+$escape     = [\"\/bfnrt]
 
 tokens :-
 
-  $white                ;  -- Ignora espacios y saltos de línea
+  $white                ;
 
-  "game"                { TokenGame }
-  "target"              { TokenTarget }
-  "object"              { TokenObject }
-  "unlock"              { TokenUnlock }
-  "elements"            { TokenElements }
-  "init"                { TokenInit }
-  "actions"             { TokenActions }
-  "return"              { TokenReturn }
-  "as"                  { TokenAs }
-  "show"                { TokenShow }
+  "game"                { \s -> TokenGame }
+  "target"              { \s -> TokenTarget }
+  "object"              { \s -> TokenObject }
+  "unlock"              { \s -> TokenUnlock }
+  "elements"            { \s -> TokenElements }
+  "init"                { \s -> TokenInit }
+  "actions"             { \s -> TokenActions }
+  "return"              { \s -> TokenReturn }
+  "as"                  { \s -> TokenAs }
+  "show"                { \s -> TokenShow }
+  "true"                { \s -> TokenTrue }
+  "false"               { \s -> TokenFalse }
 
-  "{"                   { TokenLBrace }
-  "}"                   { TokenRBrace }
-  "["                   { TokenLBracket }
-  "]"                   { TokenRBracket }
-  "("                   { TokenLPar }
-  ")"                   { TokenRPar }
+  "{"                   { \s -> TokenLBrace }
+  "}"                   { \s -> TokenRBrace }
+  "["                   { \s -> TokenLBracket }
+  "]"                   { \s -> TokenRBracket }
+  "("                   { \s -> TokenLPar }
+  ")"                   { \s -> TokenRPar }
 
-  ":"                   { TokenColon }
-  ","                   { TokenComma }
-  "="                   { TokenEquals }
-  "->"                  { TokenArrow }
-  "&&"                  { TokenAnd }
-  "||"                  { TokenOr }
-  "!"                   { TokenNot }
+  ":"                   { \s -> TokenColon }
+  "."                   { \s -> TokenDot }
+  ","                   { \s -> TokenComma }
+  "=="                  { \s -> TokenEquals }
+  "="                   { \s -> TokenAssign }
+  "->"                  { \s -> TokenArrow }
+  "&&"                  { \s -> TokenAnd }
+  "||"                  { \s -> TokenOr }
+  "!="                  { \s -> TokenDistinct }
+  "!"                   { \s -> TokenNot }
 
-  $upper$alphanum*      { TokenType yytext }      -- Tipo: empieza en mayúscula
-  $lower$alphanum*      { TokenIdent yytext }     -- Variable: empieza en minúscula
-  $digit+               { TokenNumber (read yytext) }
+  $upper$alphanum*      { \s -> TokenType s }
+  $lower$alphanum*      { \s -> TokenIdent s }
+  $digit+               { \s -> TokenNumber (read s) }
+  \"($stringChar|$escape)*\"  { \s -> TokenString (init (tail s)) }
+
 
 {
 data Token
@@ -57,16 +67,21 @@ data Token
   | TokenAs
   | TokenReturn
   | TokenShow
+  | TokenTrue
+  | TokenFalse
 
   | TokenLBrace | TokenRBrace
   | TokenLBracket | TokenRBracket
   | TokenLPar | TokenRPar
-  | TokenColon | TokenComma | TokenEquals | TokenArrow
+  | TokenColon | TokenComma | TokenAssign
+  | TokenEquals | TokenArrow
+  | TokenDistinct | TokenDot
 
   | TokenAnd | TokenOr | TokenNot
 
   | TokenIdent String
   | TokenType String
   | TokenNumber Int
+  | TokenString String
   deriving (Show, Eq)
 }

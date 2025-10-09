@@ -1,6 +1,6 @@
 module Main (main) where
-
-import Lib
-
 main :: IO ()
-main = someFunc
+main = do
+    input <- getContents
+    let tokens = alexScanTokens input
+    print tokens

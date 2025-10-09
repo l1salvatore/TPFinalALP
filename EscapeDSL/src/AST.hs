@@ -25,7 +25,6 @@ data Exp where
   Natural :: Int -> Exp
   Chained :: Chained -> Exp
   Message :: String -> Exp
-  BoolExp :: BoolExp -> Exp
 
 deriving instance Show Exp
 deriving instance Eq Exp
@@ -52,41 +51,31 @@ data Chained = Call ChainedCall | Access ChainedAccess
   deriving (Show, Eq)
 
 -- Una llamada encadenada es del tipo a.b.c().d.....f(), el último componente es una llamada 
-data ChainedCall = Action Variable Args | ChainAction Chained Variable Args
+data ChainedCall = Action Variable Args | ChainCall Chained ChainedCall
   deriving (Show, Eq)
 
 -- Un acceso encadenado es del tipo a.b.c.d().e.....x.y.z, el último componente no es una acción
-data ChainedAccess = Variable Variable | ChainVariable Chained Variable
+data ChainedAccess = Variable Variable | ChainAccess Chained ChainedAccess
   deriving (Show, Eq)
 -- Los argumentos es una lista de variables
 type Args = [Variable]
 
--- El tipo de la definición
--- Si o sí tiene que tener un Game definido
-data GameDefinition = Game Declaration Definition 
-                    | GameDefinitionSeq Definition GameDefinition
+-- El tipo de un game definition
+-- Una lista de definiciones
+type GameDefinition = [Definition]
+
+-- El tipo de lass definiciones
+data Definition = Game [Declaration]
+                | Target TypeName [Declaration]
+                | Object TypeName [Declaration]
   deriving (Show, Eq)
 
--- El tipo de las definiciones
--- Puede contener Target y Object, o una secuencia de las mismas
-data Definition = Target TypeName TargetDeclaration
-                | Object TypeName Declaration
-                | DefinitionSeq Definition Definition
-  deriving (Show, Eq)
-
--- Las declaraciones dentro de una clase de tipo Target
--- Sí o sí contiene las condiciones de desbloqueo. La lista de boolexp indica que se tiene que cumplir la conjunción de todos los elementos
-data TargetDeclaration = Unlock [BoolExp] Declaration
-                      | TargetDeclarationSeq Declaration TargetDeclaration
-  deriving (Show, Eq)                   
-
--- Las declaraciones dentro de una clase de tipo Object
--- Puede tener elementos, una sección que indica el estado inicial de estos elements
--- E indica acciones
-data Declaration = Elements [Element]
+-- Las declaraciones dentro de una clase
+-- Puede contener Unlock, Elements, Init, Actions
+data Declaration = Unlock [BoolExp] 
+                 | Elements [Element]
                  | Init [Assignment] 
                  | Actions [Action]
-                 | DeclarationSeq Declaration Declaration
   deriving (Show, Eq)                   
 
 

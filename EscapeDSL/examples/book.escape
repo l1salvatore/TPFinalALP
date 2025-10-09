@@ -1,0 +1,62 @@
+target PadLock {
+     elements: [
+	  number code
+     ]
+     init: [ code = 1111 ]
+     unlock: [ code == 1234 ]
+     actions: [
+	SetCode(number n) -> code = n
+     ]
+}
+
+target Door {
+    elements: [
+	  PadLock padlock
+	]
+    init: [ padlock.init ]
+	
+    unlock: [ padlock.unlock ]
+    actions: [
+	SetCode(number n) -> padlock.SetCode(n)
+    ]
+}
+
+object OldBook {
+    elements: [
+       message text
+    ]
+    init: text = "Charles was born in /|/|"
+    actions: [
+	Scrape(Scraper sc) -> text = sc.Scrape(),
+	Show() -> print text
+    ]
+}
+
+object Scraper {
+     elements: []
+     init: []
+     actions: [
+	Scrape() as message -> return "Charles was born in 1234"
+     ]
+}
+
+object Box {
+    elements: [
+      Scraper scraper
+    ]
+    init: [ scraper.init ]
+    actions: []
+}
+
+game {
+  elements: [
+    Door door,
+    OldBook book,
+    Box box
+  ]
+  init: [
+    door.init,
+    book.init,
+    box.init
+  ]
+}
