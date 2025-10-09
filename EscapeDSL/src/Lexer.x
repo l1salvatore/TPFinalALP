@@ -30,6 +30,8 @@ tokens :-
   "show"                { \s -> TokenShow }
   "true"                { \s -> TokenTrue }
   "false"               { \s -> TokenFalse }
+  "message"             { \s -> TokenMessageType }
+  "number"              { \s -> TokenNumberType }
 
   "{"                   { \s -> TokenLBrace }
   "}"                   { \s -> TokenRBrace }
@@ -69,6 +71,8 @@ data Token
   | TokenShow
   | TokenTrue
   | TokenFalse
+  | TokenNumberType
+  | TokenMessageType
 
   | TokenLBrace | TokenRBrace
   | TokenLBracket | TokenRBracket

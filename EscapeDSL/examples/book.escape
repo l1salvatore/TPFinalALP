@@ -1,23 +1,19 @@
 target PadLock {
-     elements: [
-	  number code
-     ]
+     elements: [number code]
      init: [ code = 1111 ]
      unlock: [ code == 1234 ]
-     actions: [
-	SetCode(number n) -> code = n
-     ]
+     actions: [ setcode(number n) -> code = n]
 }
 
 target Door {
     elements: [
-	  PadLock padlock
-	]
-    init: [ padlock.init ]
+	    PadLock padlock
+	  ]
+    init: []
 	
-    unlock: [ padlock.unlock ]
-    actions: [
-	SetCode(number n) -> padlock.SetCode(n)
+    unlock: []
+     actions: [
+	    setcode(number n) -> padlock.setcode(n)
     ]
 }
 
@@ -25,18 +21,19 @@ object OldBook {
     elements: [
        message text
     ]
-    init: text = "Charles was born in /|/|"
+    init: [text = "Charles was born in /|/|"]
     actions: [
-	Scrape(Scraper sc) -> text = sc.Scrape(),
-	Show() -> print text
+      scrape(Scraper sc) -> text = sc.scrape(),
+      print() -> show text
     ]
 }
+
 
 object Scraper {
      elements: []
      init: []
      actions: [
-	Scrape() as message -> return "Charles was born in 1234"
+	    scrape() as message -> return "Charles was born in 1234"
      ]
 }
 
@@ -44,7 +41,7 @@ object Box {
     elements: [
       Scraper scraper
     ]
-    init: [ scraper.init ]
+    init: []
     actions: []
 }
 
@@ -54,9 +51,5 @@ game {
     OldBook book,
     Box box
   ]
-  init: [
-    door.init,
-    book.init,
-    box.init
-  ]
+  init: []
 }
