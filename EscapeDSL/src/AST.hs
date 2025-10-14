@@ -70,7 +70,7 @@ data Definition = Game [Declaration]
   deriving (Show, Eq)
 
 -- Las declaraciones dentro de una clase
--- Puede contener Unlock, Elements, Init, Actions
+-- Puede contener Unlock, Elements, Init, Actions 
 data Declaration = Unlock [BoolExp] 
                  | Elements [Element]
                  | Init [InitCommand] 
