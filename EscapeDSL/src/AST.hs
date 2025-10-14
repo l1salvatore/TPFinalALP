@@ -57,7 +57,7 @@ data ChainedCall = Action Variable Args | ChainCall Chained ChainedCall
 data ChainedAccess = Variable Variable | ChainAccess Chained ChainedAccess
   deriving (Show, Eq)
 -- Los argumentos es una lista de variables
-type Args = [Variable]
+type Args = [Exp]
 
 -- El tipo de un game definition
 -- Una lista de definiciones

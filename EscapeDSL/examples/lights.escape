@@ -1,0 +1,51 @@
+target ControlPanel {
+    elements: [
+        NumberPad pad,
+        Light light
+    ]
+    unlock: [ pad.code == 4321 && light.state == "on" ]
+    actions: [
+        insertcode(number n) -> pad.setcode(n),
+        poweron() -> light.turnon()
+    ]
+}
+
+object NumberPad {
+    elements: [
+        number code
+    ]
+    init: [code = 0]
+    actions: [
+        setcode(number n) -> code = n
+    ]
+}
+
+object Light {
+    elements: [
+        message color,
+        message state
+    ]
+    init: [color = "red", state = "off"]
+    actions: [
+        turnon() -> state = "on",
+        turnoff() -> state = "off",
+        getcolor() as message -> return color
+    ]
+}
+
+object Manual {
+    elements: [
+        message text
+    ]
+    init: [text = "The correct code is 4321"]
+    actions: [
+        read() -> show text
+    ]
+}
+
+game {
+    elements: [
+        ControlPanel panel,
+        Manual manual
+    ]
+}

@@ -22,34 +22,36 @@ object Figure {
     ]
 }
 
-object OldBook {
+object Picture {
     elements: [
        message text
     ]
-    init: [text = "Charles was born in /|/|"]
+    init: [text = "Horse, Dog, Lion, Elephant"]
     actions: [
-      scrape(Scraper sc) -> text = sc.scrape(),
-      print() -> show text
+      look() -> show text
     ]
-}
-
-
-object Scraper {
-     actions: [
-	    scrape() as message -> return "Charles was born in 1234"
-     ]
 }
 
 object Box {
     elements: [
-      Scraper scraper
+      Figure elephant,
+      Figure lion,
+      Figure horse,
+      Figure dog
+    ]
+    init: [horse.setnumber(1), dog.setnumber(2), lion.setnumber(3), elephant.setnumber(4)]
+    actions: [
+      takeElephant() as Figure -> return elephant,
+      takeLion() as Figure -> return lion,
+      takeHorse() as Figure -> return horse,
+      takeDog() as Figure -> return dog
     ]
 }
 
 game {
   elements: [
-    Door door,
-    OldBook book,
-    Box box
+    Box box,
+    Picture picture,
+    FigureContainer container 
   ]
 }

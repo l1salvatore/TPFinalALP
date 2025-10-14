@@ -28,45 +28,44 @@ Grammar
 	Action -> ident '(' Elements ')' ActionReturnType "->" Command   (18)
 	ActionReturnType ->                                (19)
 	ActionReturnType -> as Type                        (20)
-	Command -> Assignment                              (21)
-	Command -> ChainedCall                             (22)
-	Command -> return Exp                              (23)
-	Command -> show Exp                                (24)
-	Elements ->                                        (25)
-	Elements -> Element                                (26)
-	Elements -> Element ',' Elements                   (27)
-	Element -> Type ident                              (28)
-	Type -> numbertype                                 (29)
-	Type -> messagetype                                (30)
-	Type -> typename                                   (31)
-	InitCommands ->                                    (32)
-	InitCommands -> InitCommand                        (33)
-	InitCommands -> InitCommands ',' InitCommands      (34)
-	InitCommand -> Assignment                          (35)
-	InitCommand -> ChainedCall                         (36)
-	Assignment -> ident '=' Exp                        (37)
-	Exp -> SimpleExp                                   (38)
-	SimpleExp -> Chained                               (39)
-	SimpleExp -> number                                (40)
-	SimpleExp -> string                                (41)
-	BoolExp -> true                                    (42)
-	BoolExp -> false                                   (43)
-	BoolExp -> '(' BoolExp ')'                         (44)
-	BoolExp -> "!" BoolExp                             (45)
-	BoolExp -> BoolExp "&&" BoolExp                    (46)
-	BoolExp -> BoolExp "||" BoolExp                    (47)
-	BoolExp -> CompExp                                 (48)
-	CompExp -> Exp "==" Exp                            (49)
-	CompExp -> Exp "!=" Exp                            (50)
-	Chained -> ChainedCall                             (51)
-	Chained -> ChainedAccess                           (52)
-	ChainedCall -> ident '(' Args ')'                  (53)
-	ChainedCall -> Chained '.' ident '(' Args ')'      (54)
-	ChainedAccess -> ident                             (55)
-	ChainedAccess -> Chained '.' ident                 (56)
-	Args ->                                            (57)
-	Args -> ident                                      (58)
-	Args -> ident ',' Args                             (59)
+	Command -> InitCommand                             (21)
+	Command -> return Exp                              (22)
+	Command -> show Exp                                (23)
+	Elements ->                                        (24)
+	Elements -> Element                                (25)
+	Elements -> Element ',' Elements                   (26)
+	Element -> Type ident                              (27)
+	Type -> numbertype                                 (28)
+	Type -> messagetype                                (29)
+	Type -> typename                                   (30)
+	InitCommands ->                                    (31)
+	InitCommands -> InitCommand                        (32)
+	InitCommands -> InitCommand ',' InitCommands       (33)
+	InitCommand -> Assignment                          (34)
+	InitCommand -> ChainedCall                         (35)
+	Assignment -> ident '=' Exp                        (36)
+	Exp -> SimpleExp                                   (37)
+	SimpleExp -> Chained                               (38)
+	SimpleExp -> number                                (39)
+	SimpleExp -> string                                (40)
+	BoolExp -> true                                    (41)
+	BoolExp -> false                                   (42)
+	BoolExp -> '(' BoolExp ')'                         (43)
+	BoolExp -> "!" BoolExp                             (44)
+	BoolExp -> BoolExp "&&" BoolExp                    (45)
+	BoolExp -> BoolExp "||" BoolExp                    (46)
+	BoolExp -> CompExp                                 (47)
+	CompExp -> Exp "==" Exp                            (48)
+	CompExp -> Exp "!=" Exp                            (49)
+	Chained -> ChainedCall                             (50)
+	Chained -> ChainedAccess                           (51)
+	ChainedCall -> ident '(' Args ')'                  (52)
+	ChainedCall -> Chained '.' ident '(' Args ')'      (53)
+	ChainedAccess -> ident                             (54)
+	ChainedAccess -> Chained '.' ident                 (55)
+	Args ->                                            (56)
+	Args -> Exp                                        (57)
+	Args -> Exp ',' Args                               (58)
 
 -----------------------------------------------------------------------------
 Terminals
@@ -118,21 +117,21 @@ Non-terminals
 	Actions         rules 15, 16, 17
 	Action          rule  18
 	ActionReturnType rules 19, 20
-	Command         rules 21, 22, 23, 24
-	Elements        rules 25, 26, 27
-	Element         rule  28
-	Type            rules 29, 30, 31
-	InitCommands    rules 32, 33, 34
-	InitCommand     rules 35, 36
-	Assignment      rule  37
-	Exp             rule  38
-	SimpleExp       rules 39, 40, 41
-	BoolExp         rules 42, 43, 44, 45, 46, 47, 48
-	CompExp         rules 49, 50
-	Chained         rules 51, 52
-	ChainedCall     rules 53, 54
-	ChainedAccess   rules 55, 56
-	Args            rules 57, 58, 59
+	Command         rules 21, 22, 23
+	Elements        rules 24, 25, 26
+	Element         rule  27
+	Type            rules 28, 29, 30
+	InitCommands    rules 31, 32, 33
+	InitCommand     rules 34, 35
+	Assignment      rule  36
+	Exp             rule  37
+	SimpleExp       rules 38, 39, 40
+	BoolExp         rules 41, 42, 43, 44, 45, 46, 47
+	CompExp         rules 48, 49
+	Chained         rules 50, 51
+	ChainedCall     rules 52, 53
+	ChainedAccess   rules 54, 55
+	Args            rules 56, 57, 58
 
 -----------------------------------------------------------------------------
 States
@@ -414,7 +413,7 @@ State 28
 
 	Declaration -> elements ':' '[' . Elements ']'      (rule 8)
 
-	']'            reduce using rule 25
+	']'            reduce using rule 24
 	typename       shift, and enter state 46
 	numbertype     shift, and enter state 47
 	messagetype    shift, and enter state 48
@@ -427,8 +426,7 @@ State 29
 
 	Declaration -> init ':' '[' . InitCommands ']'      (rule 9)
 
-	']'            reduce using rule 32
-	','            reduce using rule 32
+	']'            reduce using rule 31
 	ident          shift, and enter state 42
 
 	InitCommands   goto state 36
@@ -494,191 +492,48 @@ State 35
 State 36
 
 	Declaration -> init ':' '[' InitCommands . ']'      (rule 9)
-	InitCommands -> InitCommands . ',' InitCommands     (rule 34)
 
-	']'            shift, and enter state 77
-	','            shift, and enter state 78
+	']'            shift, and enter state 78
 
 
 State 37
 
-	InitCommands -> InitCommand .                       (rule 33)
+	InitCommands -> InitCommand .                       (rule 32)
+	InitCommands -> InitCommand . ',' InitCommands      (rule 33)
 
-	']'            reduce using rule 33
-	','            reduce using rule 33
+	']'            reduce using rule 32
+	','            shift, and enter state 77
 
 
 State 38
 
-	InitCommand -> Assignment .                         (rule 35)
+	InitCommand -> Assignment .                         (rule 34)
 
-	']'            reduce using rule 35
-	','            reduce using rule 35
+	']'            reduce using rule 34
+	','            reduce using rule 34
 
 
 State 39
 
-	ChainedCall -> Chained . '.' ident '(' Args ')'     (rule 54)
-	ChainedAccess -> Chained . '.' ident                (rule 56)
+	ChainedCall -> Chained . '.' ident '(' Args ')'     (rule 53)
+	ChainedAccess -> Chained . '.' ident                (rule 55)
 
 	'.'            shift, and enter state 66
 
 
 State 40
 
-	InitCommand -> ChainedCall .                        (rule 36)
-	Chained -> ChainedCall .                            (rule 51)
+	InitCommand -> ChainedCall .                        (rule 35)
+	Chained -> ChainedCall .                            (rule 50)
 
-	']'            reduce using rule 36
-	','            reduce using rule 36
-	'.'            reduce using rule 51
+	']'            reduce using rule 35
+	','            reduce using rule 35
+	'.'            reduce using rule 50
 
 
 State 41
 
-	Chained -> ChainedAccess .                          (rule 52)
-
-	']'            reduce using rule 52
-	')'            reduce using rule 52
-	','            reduce using rule 52
-	'.'            reduce using rule 52
-	"=="           reduce using rule 52
-	"&&"           reduce using rule 52
-	"||"           reduce using rule 52
-	"!="           reduce using rule 52
-
-
-State 42
-
-	Assignment -> ident . '=' Exp                       (rule 37)
-	ChainedCall -> ident . '(' Args ')'                 (rule 53)
-	ChainedAccess -> ident .                            (rule 55)
-
-	'('            shift, and enter state 63
-	'='            shift, and enter state 76
-	'.'            reduce using rule 55
-
-
-State 43
-
-	Declaration -> elements ':' '[' Elements . ']'      (rule 8)
-
-	']'            shift, and enter state 75
-
-
-State 44
-
-	Elements -> Element .                               (rule 26)
-	Elements -> Element . ',' Elements                  (rule 27)
-
-	']'            reduce using rule 26
-	')'            reduce using rule 26
-	','            shift, and enter state 74
-
-
-State 45
-
-	Element -> Type . ident                             (rule 28)
-
-	ident          shift, and enter state 73
-
-
-State 46
-
-	Type -> typename .                                  (rule 31)
-
-	"->"           reduce using rule 31
-	ident          reduce using rule 31
-
-
-State 47
-
-	Type -> numbertype .                                (rule 29)
-
-	"->"           reduce using rule 29
-	ident          reduce using rule 29
-
-
-State 48
-
-	Type -> messagetype .                               (rule 30)
-
-	"->"           reduce using rule 30
-	ident          reduce using rule 30
-
-
-State 49
-
-	Declaration -> unlock ':' '[' UnlockConditions . ']'    (rule 11)
-
-	']'            shift, and enter state 72
-
-
-State 50
-
-	CompExp -> Exp . "==" Exp                           (rule 49)
-	CompExp -> Exp . "!=" Exp                           (rule 50)
-
-	"=="           shift, and enter state 70
-	"!="           shift, and enter state 71
-
-
-State 51
-
-	Exp -> SimpleExp .                                  (rule 38)
-
-	']'            reduce using rule 38
-	')'            reduce using rule 38
-	','            reduce using rule 38
-	"=="           reduce using rule 38
-	"&&"           reduce using rule 38
-	"||"           reduce using rule 38
-	"!="           reduce using rule 38
-
-
-State 52
-
-	UnlockConditions -> BoolExp .                       (rule 13)
-	UnlockConditions -> BoolExp . ',' UnlockConditions    (rule 14)
-	BoolExp -> BoolExp . "&&" BoolExp                   (rule 46)
-	BoolExp -> BoolExp . "||" BoolExp                   (rule 47)
-
-	']'            reduce using rule 13
-	','            shift, and enter state 67
-	"&&"           shift, and enter state 68
-	"||"           shift, and enter state 69
-
-
-State 53
-
-	BoolExp -> CompExp .                                (rule 48)
-
-	']'            reduce using rule 48
-	')'            reduce using rule 48
-	','            reduce using rule 48
-	"&&"           reduce using rule 48
-	"||"           reduce using rule 48
-
-
-State 54
-
-	SimpleExp -> Chained .                              (rule 39)
-	ChainedCall -> Chained . '.' ident '(' Args ')'     (rule 54)
-	ChainedAccess -> Chained . '.' ident                (rule 56)
-
-	']'            reduce using rule 39
-	')'            reduce using rule 39
-	','            reduce using rule 39
-	'.'            shift, and enter state 66
-	"=="           reduce using rule 39
-	"&&"           reduce using rule 39
-	"||"           reduce using rule 39
-	"!="           reduce using rule 39
-
-
-State 55
-
-	Chained -> ChainedCall .                            (rule 51)
+	Chained -> ChainedAccess .                          (rule 51)
 
 	']'            reduce using rule 51
 	')'            reduce using rule 51
@@ -690,9 +545,162 @@ State 55
 	"!="           reduce using rule 51
 
 
+State 42
+
+	Assignment -> ident . '=' Exp                       (rule 36)
+	ChainedCall -> ident . '(' Args ')'                 (rule 52)
+	ChainedAccess -> ident .                            (rule 54)
+
+	'('            shift, and enter state 63
+	'='            shift, and enter state 76
+	'.'            reduce using rule 54
+
+
+State 43
+
+	Declaration -> elements ':' '[' Elements . ']'      (rule 8)
+
+	']'            shift, and enter state 75
+
+
+State 44
+
+	Elements -> Element .                               (rule 25)
+	Elements -> Element . ',' Elements                  (rule 26)
+
+	']'            reduce using rule 25
+	')'            reduce using rule 25
+	','            shift, and enter state 74
+
+
+State 45
+
+	Element -> Type . ident                             (rule 27)
+
+	ident          shift, and enter state 73
+
+
+State 46
+
+	Type -> typename .                                  (rule 30)
+
+	"->"           reduce using rule 30
+	ident          reduce using rule 30
+
+
+State 47
+
+	Type -> numbertype .                                (rule 28)
+
+	"->"           reduce using rule 28
+	ident          reduce using rule 28
+
+
+State 48
+
+	Type -> messagetype .                               (rule 29)
+
+	"->"           reduce using rule 29
+	ident          reduce using rule 29
+
+
+State 49
+
+	Declaration -> unlock ':' '[' UnlockConditions . ']'    (rule 11)
+
+	']'            shift, and enter state 72
+
+
+State 50
+
+	CompExp -> Exp . "==" Exp                           (rule 48)
+	CompExp -> Exp . "!=" Exp                           (rule 49)
+
+	"=="           shift, and enter state 70
+	"!="           shift, and enter state 71
+
+
+State 51
+
+	Exp -> SimpleExp .                                  (rule 37)
+
+	']'            reduce using rule 37
+	')'            reduce using rule 37
+	','            reduce using rule 37
+	"=="           reduce using rule 37
+	"&&"           reduce using rule 37
+	"||"           reduce using rule 37
+	"!="           reduce using rule 37
+
+
+State 52
+
+	UnlockConditions -> BoolExp .                       (rule 13)
+	UnlockConditions -> BoolExp . ',' UnlockConditions    (rule 14)
+	BoolExp -> BoolExp . "&&" BoolExp                   (rule 45)
+	BoolExp -> BoolExp . "||" BoolExp                   (rule 46)
+
+	']'            reduce using rule 13
+	','            shift, and enter state 67
+	"&&"           shift, and enter state 68
+	"||"           shift, and enter state 69
+
+
+State 53
+
+	BoolExp -> CompExp .                                (rule 47)
+
+	']'            reduce using rule 47
+	')'            reduce using rule 47
+	','            reduce using rule 47
+	"&&"           reduce using rule 47
+	"||"           reduce using rule 47
+
+
+State 54
+
+	SimpleExp -> Chained .                              (rule 38)
+	ChainedCall -> Chained . '.' ident '(' Args ')'     (rule 53)
+	ChainedAccess -> Chained . '.' ident                (rule 55)
+
+	']'            reduce using rule 38
+	')'            reduce using rule 38
+	','            reduce using rule 38
+	'.'            shift, and enter state 66
+	"=="           reduce using rule 38
+	"&&"           reduce using rule 38
+	"||"           reduce using rule 38
+	"!="           reduce using rule 38
+
+
+State 55
+
+	Chained -> ChainedCall .                            (rule 50)
+
+	']'            reduce using rule 50
+	')'            reduce using rule 50
+	','            reduce using rule 50
+	'.'            reduce using rule 50
+	"=="           reduce using rule 50
+	"&&"           reduce using rule 50
+	"||"           reduce using rule 50
+	"!="           reduce using rule 50
+
+
 State 56
 
-	BoolExp -> true .                                   (rule 42)
+	BoolExp -> true .                                   (rule 41)
+
+	']'            reduce using rule 41
+	')'            reduce using rule 41
+	','            reduce using rule 41
+	"&&"           reduce using rule 41
+	"||"           reduce using rule 41
+
+
+State 57
+
+	BoolExp -> false .                                  (rule 42)
 
 	']'            reduce using rule 42
 	')'            reduce using rule 42
@@ -701,20 +709,9 @@ State 56
 	"||"           reduce using rule 42
 
 
-State 57
-
-	BoolExp -> false .                                  (rule 43)
-
-	']'            reduce using rule 43
-	')'            reduce using rule 43
-	','            reduce using rule 43
-	"&&"           reduce using rule 43
-	"||"           reduce using rule 43
-
-
 State 58
 
-	BoolExp -> '(' . BoolExp ')'                        (rule 44)
+	BoolExp -> '(' . BoolExp ')'                        (rule 43)
 
 	true           shift, and enter state 56
 	false          shift, and enter state 57
@@ -734,7 +731,7 @@ State 58
 
 State 59
 
-	BoolExp -> "!" . BoolExp                            (rule 45)
+	BoolExp -> "!" . BoolExp                            (rule 44)
 
 	true           shift, and enter state 56
 	false          shift, and enter state 57
@@ -754,23 +751,36 @@ State 59
 
 State 60
 
-	ChainedCall -> ident . '(' Args ')'                 (rule 53)
-	ChainedAccess -> ident .                            (rule 55)
+	ChainedCall -> ident . '(' Args ')'                 (rule 52)
+	ChainedAccess -> ident .                            (rule 54)
 
-	']'            reduce using rule 55
+	']'            reduce using rule 54
 	'('            shift, and enter state 63
-	')'            reduce using rule 55
-	','            reduce using rule 55
-	'.'            reduce using rule 55
-	"=="           reduce using rule 55
-	"&&"           reduce using rule 55
-	"||"           reduce using rule 55
-	"!="           reduce using rule 55
+	')'            reduce using rule 54
+	','            reduce using rule 54
+	'.'            reduce using rule 54
+	"=="           reduce using rule 54
+	"&&"           reduce using rule 54
+	"||"           reduce using rule 54
+	"!="           reduce using rule 54
 
 
 State 61
 
-	SimpleExp -> number .                               (rule 40)
+	SimpleExp -> number .                               (rule 39)
+
+	']'            reduce using rule 39
+	')'            reduce using rule 39
+	','            reduce using rule 39
+	"=="           reduce using rule 39
+	"&&"           reduce using rule 39
+	"||"           reduce using rule 39
+	"!="           reduce using rule 39
+
+
+State 62
+
+	SimpleExp -> string .                               (rule 40)
 
 	']'            reduce using rule 40
 	')'            reduce using rule 40
@@ -781,50 +791,44 @@ State 61
 	"!="           reduce using rule 40
 
 
-State 62
-
-	SimpleExp -> string .                               (rule 41)
-
-	']'            reduce using rule 41
-	')'            reduce using rule 41
-	','            reduce using rule 41
-	"=="           reduce using rule 41
-	"&&"           reduce using rule 41
-	"||"           reduce using rule 41
-	"!="           reduce using rule 41
-
-
 State 63
 
-	ChainedCall -> ident '(' . Args ')'                 (rule 53)
+	ChainedCall -> ident '(' . Args ')'                 (rule 52)
 
-	')'            reduce using rule 57
-	ident          shift, and enter state 95
+	')'            reduce using rule 56
+	ident          shift, and enter state 60
+	number         shift, and enter state 61
+	string         shift, and enter state 62
 
-	Args           goto state 94
+	Exp            goto state 94
+	SimpleExp      goto state 51
+	Chained        goto state 54
+	ChainedCall    goto state 55
+	ChainedAccess  goto state 41
+	Args           goto state 95
 
 State 64
 
-	BoolExp -> "!" BoolExp .                            (rule 45)
-	BoolExp -> BoolExp . "&&" BoolExp                   (rule 46)
-	BoolExp -> BoolExp . "||" BoolExp                   (rule 47)
+	BoolExp -> "!" BoolExp .                            (rule 44)
+	BoolExp -> BoolExp . "&&" BoolExp                   (rule 45)
+	BoolExp -> BoolExp . "||" BoolExp                   (rule 46)
 
-	']'            reduce using rule 45
-	')'            reduce using rule 45
-	','            reduce using rule 45
+	']'            reduce using rule 44
+	')'            reduce using rule 44
+	','            reduce using rule 44
 	"&&"           shift, and enter state 68
-			(reduce using rule 45)
+			(reduce using rule 44)
 
 	"||"           shift, and enter state 69
-			(reduce using rule 45)
+			(reduce using rule 44)
 
 
 
 State 65
 
-	BoolExp -> '(' BoolExp . ')'                        (rule 44)
-	BoolExp -> BoolExp . "&&" BoolExp                   (rule 46)
-	BoolExp -> BoolExp . "||" BoolExp                   (rule 47)
+	BoolExp -> '(' BoolExp . ')'                        (rule 43)
+	BoolExp -> BoolExp . "&&" BoolExp                   (rule 45)
+	BoolExp -> BoolExp . "||" BoolExp                   (rule 46)
 
 	')'            shift, and enter state 93
 	"&&"           shift, and enter state 68
@@ -833,8 +837,8 @@ State 65
 
 State 66
 
-	ChainedCall -> Chained '.' . ident '(' Args ')'     (rule 54)
-	ChainedAccess -> Chained '.' . ident                (rule 56)
+	ChainedCall -> Chained '.' . ident '(' Args ')'     (rule 53)
+	ChainedAccess -> Chained '.' . ident                (rule 55)
 
 	ident          shift, and enter state 92
 
@@ -863,7 +867,7 @@ State 67
 
 State 68
 
-	BoolExp -> BoolExp "&&" . BoolExp                   (rule 46)
+	BoolExp -> BoolExp "&&" . BoolExp                   (rule 45)
 
 	true           shift, and enter state 56
 	false          shift, and enter state 57
@@ -883,7 +887,7 @@ State 68
 
 State 69
 
-	BoolExp -> BoolExp "||" . BoolExp                   (rule 47)
+	BoolExp -> BoolExp "||" . BoolExp                   (rule 46)
 
 	true           shift, and enter state 56
 	false          shift, and enter state 57
@@ -903,7 +907,7 @@ State 69
 
 State 70
 
-	CompExp -> Exp "==" . Exp                           (rule 49)
+	CompExp -> Exp "==" . Exp                           (rule 48)
 
 	ident          shift, and enter state 60
 	number         shift, and enter state 61
@@ -917,7 +921,7 @@ State 70
 
 State 71
 
-	CompExp -> Exp "!=" . Exp                           (rule 50)
+	CompExp -> Exp "!=" . Exp                           (rule 49)
 
 	ident          shift, and enter state 60
 	number         shift, and enter state 61
@@ -942,19 +946,19 @@ State 72
 
 State 73
 
-	Element -> Type ident .                             (rule 28)
+	Element -> Type ident .                             (rule 27)
 
-	']'            reduce using rule 28
-	')'            reduce using rule 28
-	','            reduce using rule 28
+	']'            reduce using rule 27
+	')'            reduce using rule 27
+	','            reduce using rule 27
 
 
 State 74
 
-	Elements -> Element ',' . Elements                  (rule 27)
+	Elements -> Element ',' . Elements                  (rule 26)
 
-	']'            reduce using rule 25
-	')'            reduce using rule 25
+	']'            reduce using rule 24
+	')'            reduce using rule 24
 	typename       shift, and enter state 46
 	numbertype     shift, and enter state 47
 	messagetype    shift, and enter state 48
@@ -976,7 +980,7 @@ State 75
 
 State 76
 
-	Assignment -> ident '=' . Exp                       (rule 37)
+	Assignment -> ident '=' . Exp                       (rule 36)
 
 	ident          shift, and enter state 60
 	number         shift, and enter state 61
@@ -990,21 +994,9 @@ State 76
 
 State 77
 
-	Declaration -> init ':' '[' InitCommands ']' .      (rule 9)
+	InitCommands -> InitCommand ',' . InitCommands      (rule 33)
 
-	unlock         reduce using rule 9
-	elements       reduce using rule 9
-	init           reduce using rule 9
-	actions        reduce using rule 9
-	'}'            reduce using rule 9
-
-
-State 78
-
-	InitCommands -> InitCommands ',' . InitCommands     (rule 34)
-
-	']'            reduce using rule 32
-	','            reduce using rule 32
+	']'            reduce using rule 31
 	ident          shift, and enter state 42
 
 	InitCommands   goto state 84
@@ -1014,11 +1006,22 @@ State 78
 	ChainedCall    goto state 40
 	ChainedAccess  goto state 41
 
+State 78
+
+	Declaration -> init ':' '[' InitCommands ']' .      (rule 9)
+
+	unlock         reduce using rule 9
+	elements       reduce using rule 9
+	init           reduce using rule 9
+	actions        reduce using rule 9
+	'}'            reduce using rule 9
+
+
 State 79
 
 	Action -> ident '(' . Elements ')' ActionReturnType "->" Command    (rule 18)
 
-	')'            reduce using rule 25
+	')'            reduce using rule 24
 	typename       shift, and enter state 46
 	numbertype     shift, and enter state 47
 	messagetype    shift, and enter state 48
@@ -1064,43 +1067,30 @@ State 83
 
 State 84
 
-	InitCommands -> InitCommands . ',' InitCommands     (rule 34)
-	InitCommands -> InitCommands ',' InitCommands .     (rule 34)
+	InitCommands -> InitCommand ',' InitCommands .      (rule 33)
 
-	']'            reduce using rule 34
-	','            reduce using rule 34
+	']'            reduce using rule 33
 
 
 State 85
 
-	Assignment -> ident '=' Exp .                       (rule 37)
+	Assignment -> ident '=' Exp .                       (rule 36)
 
-	']'            reduce using rule 37
-	','            reduce using rule 37
+	']'            reduce using rule 36
+	','            reduce using rule 36
 
 
 State 86
 
-	Elements -> Element ',' Elements .                  (rule 27)
+	Elements -> Element ',' Elements .                  (rule 26)
 
-	']'            reduce using rule 27
-	')'            reduce using rule 27
+	']'            reduce using rule 26
+	')'            reduce using rule 26
 
 
 State 87
 
-	CompExp -> Exp "!=" Exp .                           (rule 50)
-
-	']'            reduce using rule 50
-	')'            reduce using rule 50
-	','            reduce using rule 50
-	"&&"           reduce using rule 50
-	"||"           reduce using rule 50
-
-
-State 88
-
-	CompExp -> Exp "==" Exp .                           (rule 49)
+	CompExp -> Exp "!=" Exp .                           (rule 49)
 
 	']'            reduce using rule 49
 	')'            reduce using rule 49
@@ -1109,30 +1099,41 @@ State 88
 	"||"           reduce using rule 49
 
 
+State 88
+
+	CompExp -> Exp "==" Exp .                           (rule 48)
+
+	']'            reduce using rule 48
+	')'            reduce using rule 48
+	','            reduce using rule 48
+	"&&"           reduce using rule 48
+	"||"           reduce using rule 48
+
+
 State 89
 
-	BoolExp -> BoolExp . "&&" BoolExp                   (rule 46)
-	BoolExp -> BoolExp . "||" BoolExp                   (rule 47)
-	BoolExp -> BoolExp "||" BoolExp .                   (rule 47)
-
-	']'            reduce using rule 47
-	')'            reduce using rule 47
-	','            reduce using rule 47
-	"&&"           reduce using rule 47
-	"||"           reduce using rule 47
-
-
-State 90
-
-	BoolExp -> BoolExp . "&&" BoolExp                   (rule 46)
-	BoolExp -> BoolExp "&&" BoolExp .                   (rule 46)
-	BoolExp -> BoolExp . "||" BoolExp                   (rule 47)
+	BoolExp -> BoolExp . "&&" BoolExp                   (rule 45)
+	BoolExp -> BoolExp . "||" BoolExp                   (rule 46)
+	BoolExp -> BoolExp "||" BoolExp .                   (rule 46)
 
 	']'            reduce using rule 46
 	')'            reduce using rule 46
 	','            reduce using rule 46
 	"&&"           reduce using rule 46
 	"||"           reduce using rule 46
+
+
+State 90
+
+	BoolExp -> BoolExp . "&&" BoolExp                   (rule 45)
+	BoolExp -> BoolExp "&&" BoolExp .                   (rule 45)
+	BoolExp -> BoolExp . "||" BoolExp                   (rule 46)
+
+	']'            reduce using rule 45
+	')'            reduce using rule 45
+	','            reduce using rule 45
+	"&&"           reduce using rule 45
+	"||"           reduce using rule 45
 
 
 State 91
@@ -1144,77 +1145,91 @@ State 91
 
 State 92
 
-	ChainedCall -> Chained '.' ident . '(' Args ')'     (rule 54)
-	ChainedAccess -> Chained '.' ident .                (rule 56)
+	ChainedCall -> Chained '.' ident . '(' Args ')'     (rule 53)
+	ChainedAccess -> Chained '.' ident .                (rule 55)
 
-	']'            reduce using rule 56
+	']'            reduce using rule 55
 	'('            shift, and enter state 98
-	')'            reduce using rule 56
-	','            reduce using rule 56
-	'.'            reduce using rule 56
-	"=="           reduce using rule 56
-	"&&"           reduce using rule 56
-	"||"           reduce using rule 56
-	"!="           reduce using rule 56
+	')'            reduce using rule 55
+	','            reduce using rule 55
+	'.'            reduce using rule 55
+	"=="           reduce using rule 55
+	"&&"           reduce using rule 55
+	"||"           reduce using rule 55
+	"!="           reduce using rule 55
 
 
 State 93
 
-	BoolExp -> '(' BoolExp ')' .                        (rule 44)
+	BoolExp -> '(' BoolExp ')' .                        (rule 43)
 
-	']'            reduce using rule 44
-	')'            reduce using rule 44
-	','            reduce using rule 44
-	"&&"           reduce using rule 44
-	"||"           reduce using rule 44
+	']'            reduce using rule 43
+	')'            reduce using rule 43
+	','            reduce using rule 43
+	"&&"           reduce using rule 43
+	"||"           reduce using rule 43
 
 
 State 94
 
-	ChainedCall -> ident '(' Args . ')'                 (rule 53)
+	Args -> Exp .                                       (rule 57)
+	Args -> Exp . ',' Args                              (rule 58)
 
-	')'            shift, and enter state 97
+	')'            reduce using rule 57
+	','            shift, and enter state 97
 
 
 State 95
 
-	Args -> ident .                                     (rule 58)
-	Args -> ident . ',' Args                            (rule 59)
+	ChainedCall -> ident '(' Args . ')'                 (rule 52)
 
-	')'            reduce using rule 58
-	','            shift, and enter state 96
+	')'            shift, and enter state 96
 
 
 State 96
 
-	Args -> ident ',' . Args                            (rule 59)
+	ChainedCall -> ident '(' Args ')' .                 (rule 52)
 
-	')'            reduce using rule 57
-	ident          shift, and enter state 95
+	']'            reduce using rule 52
+	')'            reduce using rule 52
+	','            reduce using rule 52
+	'.'            reduce using rule 52
+	"=="           reduce using rule 52
+	"&&"           reduce using rule 52
+	"||"           reduce using rule 52
+	"!="           reduce using rule 52
 
-	Args           goto state 103
 
 State 97
 
-	ChainedCall -> ident '(' Args ')' .                 (rule 53)
+	Args -> Exp ',' . Args                              (rule 58)
 
-	']'            reduce using rule 53
-	')'            reduce using rule 53
-	','            reduce using rule 53
-	'.'            reduce using rule 53
-	"=="           reduce using rule 53
-	"&&"           reduce using rule 53
-	"||"           reduce using rule 53
-	"!="           reduce using rule 53
+	')'            reduce using rule 56
+	ident          shift, and enter state 60
+	number         shift, and enter state 61
+	string         shift, and enter state 62
 
+	Exp            goto state 94
+	SimpleExp      goto state 51
+	Chained        goto state 54
+	ChainedCall    goto state 55
+	ChainedAccess  goto state 41
+	Args           goto state 103
 
 State 98
 
-	ChainedCall -> Chained '.' ident '(' . Args ')'     (rule 54)
+	ChainedCall -> Chained '.' ident '(' . Args ')'     (rule 53)
 
-	')'            reduce using rule 57
-	ident          shift, and enter state 95
+	')'            reduce using rule 56
+	ident          shift, and enter state 60
+	number         shift, and enter state 61
+	string         shift, and enter state 62
 
+	Exp            goto state 94
+	SimpleExp      goto state 51
+	Chained        goto state 54
+	ChainedCall    goto state 55
+	ChainedAccess  goto state 41
 	Args           goto state 102
 
 State 99
@@ -1245,30 +1260,30 @@ State 101
 
 State 102
 
-	ChainedCall -> Chained '.' ident '(' Args . ')'     (rule 54)
+	ChainedCall -> Chained '.' ident '(' Args . ')'     (rule 53)
 
 	')'            shift, and enter state 104
 
 
 State 103
 
-	Args -> ident ',' Args .                            (rule 59)
+	Args -> Exp ',' Args .                              (rule 58)
 
-	')'            reduce using rule 59
+	')'            reduce using rule 58
 
 
 State 104
 
-	ChainedCall -> Chained '.' ident '(' Args ')' .     (rule 54)
+	ChainedCall -> Chained '.' ident '(' Args ')' .     (rule 53)
 
-	']'            reduce using rule 54
-	')'            reduce using rule 54
-	','            reduce using rule 54
-	'.'            reduce using rule 54
-	"=="           reduce using rule 54
-	"&&"           reduce using rule 54
-	"||"           reduce using rule 54
-	"!="           reduce using rule 54
+	']'            reduce using rule 53
+	')'            reduce using rule 53
+	','            reduce using rule 53
+	'.'            reduce using rule 53
+	"=="           reduce using rule 53
+	"&&"           reduce using rule 53
+	"||"           reduce using rule 53
+	"!="           reduce using rule 53
 
 
 State 105
@@ -1282,14 +1297,15 @@ State 106
 
 	Action -> ident '(' Elements ')' ActionReturnType "->" . Command    (rule 18)
 
-	return         shift, and enter state 110
-	show           shift, and enter state 111
+	return         shift, and enter state 109
+	show           shift, and enter state 110
 	ident          shift, and enter state 42
 
 	Command        goto state 107
-	Assignment     goto state 108
+	InitCommand    goto state 108
+	Assignment     goto state 38
 	Chained        goto state 39
-	ChainedCall    goto state 109
+	ChainedCall    goto state 40
 	ChainedAccess  goto state 41
 
 State 107
@@ -1302,7 +1318,7 @@ State 107
 
 State 108
 
-	Command -> Assignment .                             (rule 21)
+	Command -> InitCommand .                            (rule 21)
 
 	']'            reduce using rule 21
 	','            reduce using rule 21
@@ -1310,31 +1326,7 @@ State 108
 
 State 109
 
-	Command -> ChainedCall .                            (rule 22)
-	Chained -> ChainedCall .                            (rule 51)
-
-	']'            reduce using rule 22
-	','            reduce using rule 22
-	'.'            reduce using rule 51
-
-
-State 110
-
-	Command -> return . Exp                             (rule 23)
-
-	ident          shift, and enter state 60
-	number         shift, and enter state 61
-	string         shift, and enter state 62
-
-	Exp            goto state 113
-	SimpleExp      goto state 51
-	Chained        goto state 54
-	ChainedCall    goto state 55
-	ChainedAccess  goto state 41
-
-State 111
-
-	Command -> show . Exp                               (rule 24)
+	Command -> return . Exp                             (rule 22)
 
 	ident          shift, and enter state 60
 	number         shift, and enter state 61
@@ -1346,26 +1338,40 @@ State 111
 	ChainedCall    goto state 55
 	ChainedAccess  goto state 41
 
-State 112
+State 110
 
-	Command -> show Exp .                               (rule 24)
+	Command -> show . Exp                               (rule 23)
 
-	']'            reduce using rule 24
-	','            reduce using rule 24
+	ident          shift, and enter state 60
+	number         shift, and enter state 61
+	string         shift, and enter state 62
 
+	Exp            goto state 111
+	SimpleExp      goto state 51
+	Chained        goto state 54
+	ChainedCall    goto state 55
+	ChainedAccess  goto state 41
 
-State 113
+State 111
 
-	Command -> return Exp .                             (rule 23)
+	Command -> show Exp .                               (rule 23)
 
 	']'            reduce using rule 23
 	','            reduce using rule 23
 
 
+State 112
+
+	Command -> return Exp .                             (rule 22)
+
+	']'            reduce using rule 22
+	','            reduce using rule 22
+
+
 -----------------------------------------------------------------------------
 Grammar Totals
 -----------------------------------------------------------------------------
-Number of rules: 60
+Number of rules: 59
 Number of terminals: 34
 Number of non-terminals: 24
-Number of states: 114
+Number of states: 113

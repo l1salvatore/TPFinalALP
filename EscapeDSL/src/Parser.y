@@ -193,10 +193,10 @@ ChainedAccess : ident                            { Variable $1 }
               | Chained '.' ident                { ChainAccess $1 (Variable $3) }
 
 -- args ::= e | args1
--- args1 ::= variable | args1 , args1
+-- args1 ::= exp | args1 , args1
 Args : {- empty -}                               { [] }
-     | ident                                     { [$1] }
-     | ident ',' Args                           { $1 : $3 }
+     | Exp                                     { [$1] }
+     | Exp ',' Args                           { $1 : $3 }
 
 {
 parseError :: [Token] -> a
