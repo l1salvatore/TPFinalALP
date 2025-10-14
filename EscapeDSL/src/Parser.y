@@ -55,7 +55,10 @@ import Lexer
 
 %%
 
-
+-- game-definition ::= game { declarations }
+--                 | target typename { declarations }
+--                 | object typename { declarations }
+--                 | game-definition game-definition
 
 GameDefinition : Definition                          { [$1] }
                 | GameDefinition Definition          { $1 ++ [$2] }
@@ -63,6 +66,12 @@ GameDefinition : Definition                          { [$1] }
 Definition : game '{' Declarations '}'               { Game $3 }
            | target typename '{' Declarations '}'        { Target $2 $4 }
            | object typename '{' Declarations '}'        { Object $2 $4 }
+
+-- declarations ::= unlock : [ unlock-conditions ]
+--              |   elements : [ elements ]
+--              |   init  : [ assignments ]
+--              |   actions : [ actions ]
+--              |   declarations declarations 
 
 Declarations : Declaration                           { [$1] }
              | Declarations Declaration              { $1 ++ [$2] }
@@ -72,9 +81,17 @@ Declaration : elements ':' '[' Elements ']'          { Elements $4 }
             | actions ':' '[' Actions ']'            { Actions $4 }
             | unlock ':' '[' UnlockConditions ']'    { Unlock $4 }
 
+-- unlock-conditions ::= e | unlock-conditions-1
+-- unlock-conditions-1 ::= boolexp 
+--                  | unlock-conditions-1 , unlock-conditions-1
+
 UnlockConditions :{- empty -}                       { [] }     
                  | BoolExp                          { [$1] }
                  | BoolExp ',' UnlockConditions     { $1 : $3 }
+
+-- actions ::= e | actions1
+-- actions1 ::= variable ( elements ) return-type -> command 
+--           |  actions1 , actions1
 
 Actions : {- empty -}                               { [] }
         | Action                                    { [$1] }
@@ -82,35 +99,65 @@ Actions : {- empty -}                               { [] }
 
 Action : ident '(' Elements ')' ActionReturnType "->" Command  { ActionDeclare $1 $3 $5 $7 }
 
+-- return-type ::= e | as type 
+
 ActionReturnType : {- empty -}                      { Nothing }
                  | as Type                          { Just $2 }
+
+-- command ::= assignment
+--         | chained-call
+--         | return exp
+--         | show exp
 
 Command : Assignment                                { Assign $1 }
         | ChainedCall                              { ChainedCall $1 }
         | return Exp                               { Return $2 }
         | show Exp                                 { Show $2 }
 
+-- elements ::= e | elements1
+-- elements1 ::= type variable 
+--          | elements1 , elements1
+
 Elements : {- empty -}                             { [] }
          | Element                                 { [$1] }
          | Element ',' Elements                    { $1 : $3 }
 
+Element : Type ident                               { ElementDeclare $1 $2 }
+
+-- type ::= number | message | typename
 Type : numbertype                                   { TNatural }
      | messagetype                                  { TMessage }
      | typename                                     { TypeName $1 }
 
-Element : Type ident                               { ElementDeclare $1 $2 }
+-- assignments ::= e | assignments1
+-- assignments1 ::= assignment 
+--               |  assignments1 , assignments1
 
 Assignments : {- empty -}                          { [] }
             | Assignment                           { [$1] }
             | Assignment ',' Assignments           { $1 : $3 }
 
+-- assignment ::= variable = exp
+
 Assignment : ident '=' Exp                         { Let $1 $3 }
+
+-- exp ::= chained 
+--       | natural
+--       | message
 
 Exp : SimpleExp                     { $1 }
 
 SimpleExp : Chained                 { Chained $1 }
          | number                   { Natural $1 }
          | string                   { Message $1 }
+
+-- boolexp ::= true | false
+--        | boolexp && boolexp
+--        | boolexp || boolexp
+--        | ( boolexp )
+--        | ! boolexp
+--        | exp == exp
+--        | exp != exp
 
 BoolExp : true                                   { BTrue }
         | false                                  { BFalse }
@@ -124,6 +171,10 @@ CompExp : Exp "==" Exp                          { Eq $1 $3 }
         | Exp "!=" Exp                          { NEq $1 $3 }
 
 -- Expresiones encadenadas sin ambigüedad
+-- chained ::= variable
+--         | variable ( args )
+--         | chained . variable
+--         | chained . variable ( args )
 Chained : ChainedCall                            { Call $1 }
         | ChainedAccess                          { Access $1 }
 
@@ -133,6 +184,8 @@ ChainedCall : ident '(' Args ')'                 { Action $1 $3 }
 ChainedAccess : ident                            { Variable $1 }
               | Chained '.' ident                { ChainAccess $1 (Variable $3) }
 
+-- args ::= e | args1
+-- args1 ::= variable | args1 , args1
 Args : {- empty -}                               { [] }
      | ident                                     { [$1] }
      | ident ',' Args                           { $1 : $3 }

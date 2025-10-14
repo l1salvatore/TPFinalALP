@@ -35,10 +35,10 @@ Grammar
 	Elements ->                                        (25)
 	Elements -> Element                                (26)
 	Elements -> Element ',' Elements                   (27)
-	Type -> numbertype                                 (28)
-	Type -> messagetype                                (29)
-	Type -> typename                                   (30)
-	Element -> Type ident                              (31)
+	Element -> Type ident                              (28)
+	Type -> numbertype                                 (29)
+	Type -> messagetype                                (30)
+	Type -> typename                                   (31)
 	Assignments ->                                     (32)
 	Assignments -> Assignment                          (33)
 	Assignments -> Assignment ',' Assignments          (34)
@@ -118,8 +118,8 @@ Non-terminals
 	ActionReturnType rules 19, 20
 	Command         rules 21, 22, 23, 24
 	Elements        rules 25, 26, 27
-	Type            rules 28, 29, 30
-	Element         rule  31
+	Element         rule  28
+	Type            rules 29, 30, 31
 	Assignments     rules 32, 33, 34
 	Assignment      rule  35
 	Exp             rule  36
@@ -417,8 +417,8 @@ State 28
 	messagetype    shift, and enter state 44
 
 	Elements       goto state 39
-	Type           goto state 40
-	Element        goto state 41
+	Element        goto state 40
+	Type           goto state 41
 
 State 29
 
@@ -515,43 +515,43 @@ State 39
 
 State 40
 
-	Element -> Type . ident                             (rule 31)
-
-	ident          shift, and enter state 71
-
-
-State 41
-
 	Elements -> Element .                               (rule 26)
 	Elements -> Element . ',' Elements                  (rule 27)
 
 	']'            reduce using rule 26
 	')'            reduce using rule 26
-	','            shift, and enter state 70
+	','            shift, and enter state 71
+
+
+State 41
+
+	Element -> Type . ident                             (rule 28)
+
+	ident          shift, and enter state 70
 
 
 State 42
 
-	Type -> typename .                                  (rule 30)
+	Type -> typename .                                  (rule 31)
 
-	"->"           reduce using rule 30
-	ident          reduce using rule 30
+	"->"           reduce using rule 31
+	ident          reduce using rule 31
 
 
 State 43
 
-	Type -> numbertype .                                (rule 28)
+	Type -> numbertype .                                (rule 29)
 
-	"->"           reduce using rule 28
-	ident          reduce using rule 28
+	"->"           reduce using rule 29
+	ident          reduce using rule 29
 
 
 State 44
 
-	Type -> messagetype .                               (rule 29)
+	Type -> messagetype .                               (rule 30)
 
-	"->"           reduce using rule 29
-	ident          reduce using rule 29
+	"->"           reduce using rule 30
+	ident          reduce using rule 30
 
 
 State 45
@@ -903,6 +903,15 @@ State 69
 
 State 70
 
+	Element -> Type ident .                             (rule 28)
+
+	']'            reduce using rule 28
+	')'            reduce using rule 28
+	','            reduce using rule 28
+
+
+State 71
+
 	Elements -> Element ',' . Elements                  (rule 27)
 
 	']'            reduce using rule 25
@@ -912,17 +921,8 @@ State 70
 	messagetype    shift, and enter state 44
 
 	Elements       goto state 83
-	Type           goto state 40
-	Element        goto state 41
-
-State 71
-
-	Element -> Type ident .                             (rule 31)
-
-	']'            reduce using rule 31
-	')'            reduce using rule 31
-	','            reduce using rule 31
-
+	Element        goto state 40
+	Type           goto state 41
 
 State 72
 
@@ -980,8 +980,8 @@ State 76
 	messagetype    shift, and enter state 44
 
 	Elements       goto state 80
-	Type           goto state 40
-	Element        goto state 41
+	Element        goto state 40
+	Type           goto state 41
 
 State 77
 
