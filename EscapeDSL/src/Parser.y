@@ -69,7 +69,7 @@ Definition : game '{' Declarations '}'               { Game $3 }
 
 -- declarations ::= unlock : [ unlock-conditions ]
 --              |   elements : [ elements ]
---              |   init  : [ assignments ]
+--              |   init  : [ init-commands ]
 --              |   actions : [ actions ]
 --              |   declarations declarations 
 
@@ -77,7 +77,7 @@ Declarations : Declaration                           { [$1] }
              | Declarations Declaration              { $1 ++ [$2] }
 
 Declaration : elements ':' '[' Elements ']'          { Elements $4 }
-            | init ':' '[' Assignments ']'           { Init $4 }
+            | init ':' '[' InitCommands ']'          { Init $4 }
             | actions ':' '[' Actions ']'            { Actions $4 }
             | unlock ':' '[' UnlockConditions ']'    { Unlock $4 }
 
@@ -109,8 +109,7 @@ ActionReturnType : {- empty -}                      { Nothing }
 --         | return exp
 --         | show exp
 
-Command : Assignment                                { Assign $1 }
-        | ChainedCall                              { ChainedCall $1 }
+Command : InitCommand                              { InitCommand $1 }
         | return Exp                               { Return $2 }
         | show Exp                                 { Show $2 }
 
@@ -129,13 +128,19 @@ Type : numbertype                                   { TNatural }
      | messagetype                                  { TMessage }
      | typename                                     { TypeName $1 }
 
--- assignments ::= e | assignments1
--- assignments1 ::= assignment 
---               |  assignments1 , assignments1
+-- init-commands ::= e | init-commands1
+-- init-commands1 ::= init-command 
+--               |  init-commands1 , init-commands1
 
-Assignments : {- empty -}                          { [] }
-            | Assignment                           { [$1] }
-            | Assignment ',' Assignments           { $1 : $3 }
+InitCommands : {- empty -}                          { [] }
+            | InitCommand                           { [$1] }
+            | InitCommand ',' InitCommands           { $1 : $3 }
+
+-- init-command ::= assignment
+--                | chained-call
+
+InitCommand : Assignment                           { Assign $1  }
+           |  ChainedCall                          { ChainedCall $1}
 
 -- assignment ::= variable = exp
 
@@ -172,9 +177,12 @@ CompExp : Exp "==" Exp                          { Eq $1 $3 }
 
 -- Expresiones encadenadas sin ambigüedad
 -- chained ::= variable
---         | variable ( args )
---         | chained . variable
---         | chained . variable ( args )
+--           | chained . variable
+--           | chained-call
+
+-- chained-call ::= variable ( args )
+--                | chained . variable ( args )
+
 Chained : ChainedCall                            { Call $1 }
         | ChainedAccess                          { Access $1 }
 

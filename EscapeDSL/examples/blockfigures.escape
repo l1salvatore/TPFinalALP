@@ -1,0 +1,55 @@
+target FigureContainer {
+     elements: [
+      Figure figure1,
+      Figure figure2,
+      Figure figure3,
+      Figure figure4
+     ]
+     unlock: [ figure1.figurenumber == 1, figure2.figurenumber == 2, figure3.figurenumber == 3, figure4.figurenumber == 4]
+     actions: [ setfigure1(Figure f) -> figure1 = f,
+                setfigure2(Figure f) -> figure2 = f,
+                setfigure3(Figure f) -> figure3 = f,
+                setfigure4(Figure f) -> figure4 = f]
+}
+
+object Figure {
+    elements: [
+	    number figurenumber
+	  ]
+    init: [figurenumber = 0]
+    actions: [
+	    setnumber(number n) -> figurenumber = n
+    ]
+}
+
+object OldBook {
+    elements: [
+       message text
+    ]
+    init: [text = "Charles was born in /|/|"]
+    actions: [
+      scrape(Scraper sc) -> text = sc.scrape(),
+      print() -> show text
+    ]
+}
+
+
+object Scraper {
+     actions: [
+	    scrape() as message -> return "Charles was born in 1234"
+     ]
+}
+
+object Box {
+    elements: [
+      Scraper scraper
+    ]
+}
+
+game {
+  elements: [
+    Door door,
+    OldBook book,
+    Box box
+  ]
+}

@@ -36,8 +36,7 @@ data Type = TMessage | TNatural | TypeName TypeName
 
 -- Comandos (sentencias)
 data Command
-  = Assign Assignment
-  | ChainedCall ChainedCall
+  = InitCommand InitCommand
   | Return Exp
   | Show Exp
   deriving (Show, Eq)
@@ -74,10 +73,13 @@ data Definition = Game [Declaration]
 -- Puede contener Unlock, Elements, Init, Actions
 data Declaration = Unlock [BoolExp] 
                  | Elements [Element]
-                 | Init [Assignment] 
+                 | Init [InitCommand] 
                  | Actions [Action]
   deriving (Show, Eq)                   
 
+data InitCommand = Assign Assignment
+                |  ChainedCall      ChainedCall
+  deriving (Show, Eq)                   
 
 -- La definición de un elemento. 
 -- El mismo consta de el nombre de un tipo y la variable
