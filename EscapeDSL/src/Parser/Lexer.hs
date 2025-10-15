@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-missing-signatures #-}
 {-# LANGUAGE CPP #-}
-{-# LINE 1 "src/Lexer.x" #-}
-module Lexer where
+{-# LINE 1 "src/Parser/Lexer.x" #-}
+module Parser.Lexer where
 #if __GLASGOW_HASKELL__ >= 603
 #include "ghcconfig.h"
 #elif defined(__GLASGOW_HASKELL__)
@@ -14849,7 +14849,7 @@ alexRightContext IBOX(sc) user__ _ _ input__ =
         -- match when checking the right context, just
         -- the first match will do.
 #endif
-{-# LINE 60 "src/Lexer.x" #-}
+{-# LINE 60 "src/Parser/Lexer.x" #-}
 data Token
   = TokenGame
   | TokenTarget

@@ -1,7 +1,7 @@
 module Main (main) where
 
-import Lexer (alexScanTokens)
-import Parser (parseEscapeRoom)
+import Parser.Lexer (alexScanTokens)
+import Parser.Parser (parseEscapeRoom)
 import System.IO (getContents)
 
 main :: IO ()

@@ -1,7 +1,7 @@
 {
-module Parser where
+module Parser.Parser where
 import AST
-import Lexer
+import Parser.Lexer
 }
 
 %name parseEscapeRoom

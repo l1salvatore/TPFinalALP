@@ -1,5 +1,5 @@
 {
-module Lexer where
+module Parser.Lexer where
 
 }
 
