@@ -1,0 +1,37 @@
+target Door {
+    elements: [
+        Clock clock
+    ]
+    init: []
+    unlock: [ clock.hour == 3, clock.minute == 30 ]
+}
+
+object Clock {
+    elements: [
+        number hour,
+        number minute
+    ]
+    init: [ hour = 0, minute = 0 ]
+    actions: [
+        sethour(number h) -> hour = h,
+        setminute(number m) -> minute = m
+    ]
+}
+
+object Note {
+    elements: [
+        message text
+    ]
+    init: [ text = "Ajustá el reloj a 3:30 para abrir la puerta." ]
+    actions: [
+        read() -> show text
+    ]
+}
+
+game {
+    elements: [
+        Door mainDoor,
+        Clock wallClock,
+        Note hint
+    ]
+}
