@@ -24,7 +24,7 @@ module Common where
             | ListT
             deriving (Show, Eq)
   
-  -- Términos con nombres
+  -- Términos con nombres 
   data LamTerm  =  LVar String
                 |  LAbs String Type LamTerm
                 |  LApp LamTerm LamTerm

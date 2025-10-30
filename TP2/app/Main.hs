@@ -4,6 +4,8 @@ import           Control.Exception              ( catch
                                                 , IOException
                                                 )
 import           Control.Monad.Except
+import Control.Monad.Trans ( MonadTrans(lift) )
+import           Control.Monad                  (when, foldM)
 import           Data.Char
 import           Data.List
 import           Data.Maybe

@@ -22,7 +22,15 @@ import           Common
 
 -- conversion a términos localmente sin nombres
 conversion :: LamTerm -> Term
-conversion = undefined
+conversion l = conversion' l [] 0
+
+conversion' :: LamTerm -> [String] -> Int -> Term
+conversion' (LVar name) [] i = Free (Global name)
+conversion' (LVar name) (x:xs) i = if x == name then Bound i
+                                 else conversion' (LVar name) xs (i+1)
+conversion' (LAbs name t term) xs i = Lam t (conversion' term (name:xs) i)
+conversion' (LApp term1 term2) xs i = conversion' term1 xs i :@: conversion' term2 xs i
+
 
 ----------------------------
 --- evaluador de términos
@@ -42,9 +50,39 @@ quote (VLam t f) = Lam t f
 
 -- evalúa un término en un entorno dado
 eval :: NameEnv Value Type -> Term -> Value
-eval = undefined
+eval xs (t1 :@: t2) =
+        let v1 = eval xs t1
+            v2 = eval xs t2
+        in
+            case v1 of
+              VLam _ body -> eval xs (sub 0 (quote v2) body)
+              _           -> error "Error de evaluación: se intentó aplicar un valor que no es una función."
+eval xs (Lam t body) = VLam t body -- Se empaqueta como valor, NO se evalúa el cuerpo.
+-- Caso 3: Variable Libre (Global)
+eval xs (Free n) =
+    case lookup n xs of
+        Just (v, _) -> v
+        Nothing     -> error ("Error de evaluación: variable libre no ligada: " ++ show n)
 
-
+-- Caso 4: Variable Ligada (Bound)
+eval xs (Bound i) =
+    error ("Error de evaluación: se encontró una variable ligada (Bound " ++ show i ++ ") fuera de su alcance. Esto no debería ocurrir en un término cerrado.")
+eval xs (Let t tv) = undefined
+eval xs Zero       = VNum NZero
+eval xs (Suc t)    = let v = eval xs t in
+                     case v of
+                        VNum nv -> VNum (NSuc nv)
+                        _       -> error "No es un número"
+eval xs (Rec t1 t2 t3) = undefined
+eval xs Nil        = VList VNil
+eval xs (Cons t ts) = let vs = eval xs ts 
+                          v  = eval xs t
+                      in
+                      case vs of 
+                         VList l -> case v of 
+                                      VNum n -> VList (VCons n l)
+                                      _      -> error "Se esperaba un número"
+                         _       -> error "No es una lista"
 
 
 ----------------------
