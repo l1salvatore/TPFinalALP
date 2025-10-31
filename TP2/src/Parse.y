@@ -17,7 +17,17 @@ import Data.Char
 %token
     '='     { TEquals }
     ':'     { TColon }
+    'let'   { TLet }
+    '0'     { TZero }
+    'succ'  { TSuc }
+    'List'  { TList }
+    'nil'   { TNil }
+    'cons'  { TCons }
+    'RL'    { TRL }
+    'in'    { TIn }
     '\\'    { TAbs }
+    'Nat'   { TNat }
+    'R'     { TRec }
     '.'     { TDot }
     '('     { TOpen }
     ')'     { TClose }
@@ -39,17 +49,38 @@ Defexp  : DEF VAR '=' Exp              { Def $2 $4 }
 
 Exp     :: { LamTerm }
         : '\\' VAR ':' Type '.' Exp    { LAbs $2 $4 $6 }
-        | NAbs                         { $1 }
-        
+        | 'let' VAR '=' Exp 'in' Exp   { LLet $2 $4 $6 } --- CAMBIO: 'let' está aquí (Nivel 1)
+        | RExp                         { $1 } --- CAMBIO: Pasa al nuevo nivel 'MidExp'        
+
+RExp :: { LamTerm }
+        : 'R' Atom Atom Atom           { LRec $2 $3 $4 }
+        | RLExp                        { $1 }
+
+RLExp :: { LamTerm }
+        : 'RL' Atom Atom Atom          { LRecList $2 $3 $4 }
+        | ConsExp                      { $1 }
+
+ConsExp :: { LamTerm }
+        : 'cons' Atom Atom             { LCons $2 $3}
+        | SuccExp                      { $1 }
+
+SuccExp  :: { LamTerm }
+        : 'succ' SuccExp                { LSuc $2 }
+        | NAbs                          { $1 }
+     
 NAbs    :: { LamTerm }
         : NAbs Atom                    { LApp $1 $2 }
         | Atom                         { $1 }
 
 Atom    :: { LamTerm }
-        : VAR                          { LVar $1 }  
+        : VAR                          { LVar $1 } 
+        | '0'                          { LZero }
+        | 'nil'                        { LNil } 
         | '(' Exp ')'                  { $2 }
 
 Type    : TYPEE                        { EmptyT }
+        | 'Nat'                        { NatT }
+        | 'List' 'Nat'                 { ListT }
         | Type '->' Type               { FunT $1 $3 }
         | '(' Type ')'                 { $2 }
 
@@ -88,6 +119,16 @@ happyError = \ s i -> Failed $ "Línea "++(show (i::LineNumber))++": Error de pa
 data Token = TVar String
                | TTypeE
                | TDef
+               | TIn
+               | TZero
+               | TLet
+               | TRec
+               | TList
+               | TNil
+               | TRL
+               | TCons
+               | TNat
+               | TSuc
                | TAbs
                | TDot
                | TOpen
@@ -116,11 +157,21 @@ lexer cont s = case s of
                     (')':cs) -> cont TClose cs
                     (':':cs) -> cont TColon cs
                     ('=':cs) -> cont TEquals cs
+                    ('R':cs) -> cont TRec cs
+                    ('0':cs) -> cont TZero cs
                     unknown -> \line -> Failed $ 
                      "Línea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
                     where lexVar cs = case span isAlpha cs of
                               ("E",rest)    -> cont TTypeE rest
                               ("def",rest)  -> cont TDef rest
+                              ("let", rest) -> cont TLet rest
+                              ("in", rest)  -> cont TIn rest
+                              ("nil", rest) -> cont TNil rest
+                              ("cons", rest) -> cont TCons rest
+                              ("List", rest) -> cont TList rest
+                              ("succ", rest) -> cont TSuc rest
+                              ("Nat", rest) -> cont TNat rest
+                              ("RL", rest)  -> cont TRL rest
                               (var,rest)    -> cont (TVar var) rest
                           consumirBK anidado cl cont s = case s of
                               ('-':('-':cs)) -> consumirBK anidado cl cont $ dropWhile ((/=) '\n') cs

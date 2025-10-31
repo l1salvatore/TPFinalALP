@@ -37,7 +37,34 @@ pp ii vs (Lam t c) =
     <> printType t
     <> text ". "
     <> pp (ii + 1) vs c
-
+pp ii vs (Let t u) =
+  text "Let"
+    <> text (vs !! ii)
+    <> text "="
+    <> pp (ii+1) vs t
+    <> text "in"
+    <> pp (ii+1) vs u
+pp ii vs Zero = text "0"
+pp ii vs (Suc t) =
+     pp (ii+1) vs t
+  <> text "+1"
+pp ii vs (Rec t1 t2 t3) =
+      text "Rec"
+    <> pp (ii+1) vs t1
+    <> pp (ii+1) vs t2
+    <> pp (ii+1) vs t3
+pp ii vs Nil = text "[]"
+pp ii vs (Cons t ts) =
+     text "("
+  <> pp (ii+1) vs t
+  <> text ")"
+  <> text " :: "
+  <> pp (ii+1) vs ts
+pp ii vs (RecList t1 t2 t3) =
+      text "RecList"
+    <> pp (ii+1) vs t1
+    <> pp (ii+1) vs t2
+    <> pp (ii+1) vs t3
 
 isLam :: Term -> Bool
 isLam (Lam _ _) = True
@@ -52,7 +79,8 @@ printType :: Type -> Doc
 printType EmptyT = text "E"
 printType (FunT t1 t2) =
   sep [parensIf (isFun t1) (printType t1), text "->", printType t2]
-
+printType NatT = text "Nat"
+printType ListT = text "List"
 
 isFun :: Type -> Bool
 isFun (FunT _ _) = True
@@ -63,6 +91,13 @@ fv (Bound _         ) = []
 fv (Free  (Global n)) = [n]
 fv (t   :@: u       ) = fv t ++ fv u
 fv (Lam _   u       ) = fv u
+fv (Let t u)          = fv t ++ fv u
+fv Zero               = []
+fv (Suc t)            = fv t
+fv (Rec t1 t2 t3)     = fv t1 ++ fv t2 ++ fv t3
+fv Nil                = []
+fv (Cons t ts)        = fv t ++ fv ts
+fv (RecList t1 t2 t3)  = fv t1 ++ fv t2 ++ fv t3
 
 ---
 printTerm :: Term -> Doc
