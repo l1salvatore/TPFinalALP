@@ -109,7 +109,8 @@ ActionReturnType : {- empty -}                      { Nothing }
 --         | return exp
 --         | show exp
 
-Command : InitCommand                              { InitCommand $1 }
+Command : Assignment                               { Assign $1 }
+        | ChainedCall                              { ChainedCall $1 }
         | return Exp                               { Return $2 }
         | show Exp                                 { Show $2 }
 
@@ -139,8 +140,8 @@ InitCommands : {- empty -}                          { [] }
 -- init-command ::= assignment
 --                | chained-call
 
-InitCommand : Assignment                           { Assign $1  }
-           |  ChainedCall                          { ChainedCall $1}
+InitCommand : Assignment                           { InitAssign $1  }
+           |  ident '.' init '(' ')'               { InitializeObject $1}
 
 -- assignment ::= variable = exp
 

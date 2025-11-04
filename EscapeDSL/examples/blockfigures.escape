@@ -39,7 +39,7 @@ object Box {
       Figure horse,
       Figure dog
     ]
-    init: [horse.setnumber(1), dog.setnumber(2), lion.setnumber(3), elephant.setnumber(4)]
+    init: [horse.init(), lion.init(), horse.init(), dog.init()]
     actions: [
       takeElephant() as Figure -> return elephant,
       takeLion() as Figure -> return lion,

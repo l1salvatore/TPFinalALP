@@ -3,6 +3,7 @@ target ControlPanel {
         NumberPad pad,
         Light light
     ]
+    init: [pad.init(), light.init()]
     unlock: [ pad.code == 4321 && light.state == "on" ]
     actions: [
         insertcode(number n) -> pad.setcode(n),
