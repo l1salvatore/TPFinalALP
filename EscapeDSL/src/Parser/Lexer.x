@@ -1,6 +1,7 @@
 {
 module Parser.Lexer where
 
+import Data.Char (isSpace)
 }
 
 %wrapper "basic"
@@ -8,53 +9,44 @@ module Parser.Lexer where
 $digit     = 0-9
 $upper     = [A-Z]
 $lower     = [a-z]
-$alpha     = [A-Za-z]
 $alphanum  = [A-Za-z0-9_]
 $white     = [\ \t\n\r]
-$stringChar = [^\"\\\n\r]
+$string    = [^\"\\\n\r]
 $escape     = [\"\/bfnrt]
 
 tokens :-
 
   $white                ;
 
-  "game"                { \s -> TokenGame }
-  "target"              { \s -> TokenTarget }
-  "object"              { \s -> TokenObject }
-  "unlock"              { \s -> TokenUnlock }
-  "elements"            { \s -> TokenElements }
-  "init"                { \s -> TokenInit }
-  "actions"             { \s -> TokenActions }
-  "return"              { \s -> TokenReturn }
-  "as"                  { \s -> TokenAs }
-  "show"                { \s -> TokenShow }
-  "true"                { \s -> TokenTrue }
-  "false"               { \s -> TokenFalse }
-  "message"             { \s -> TokenMessageType }
-  "number"              { \s -> TokenNumberType }
+  "game"                { \_ -> TokenGame }
+  "target"              { \_ -> TokenTarget }
+  "object"              { \_ -> TokenObject }
+  "unlock"              { \_ -> TokenUnlock }
+  "elements"            { \_ -> TokenElements }
+  "onuse"               { \_ -> TokenOnUse }
+  "if"                  { \_ -> TokenIf }
+  "show"                { \_ -> TokenShow }
+  "locked"              { \_ -> TokenLocked }
+  "unlocked"            { \_ -> TokenUnlocked }
+  "is"                  { \_ -> TokenIs }
+  "and"                 { \_ -> TokenAnd }
+  "or"                  { \_ -> TokenOr }
 
-  "{"                   { \s -> TokenLBrace }
-  "}"                   { \s -> TokenRBrace }
-  "["                   { \s -> TokenLBracket }
-  "]"                   { \s -> TokenRBracket }
-  "("                   { \s -> TokenLPar }
-  ")"                   { \s -> TokenRPar }
+  "{"                   { \_ -> TokenLBrace }
+  "}"                   { \_ -> TokenRBrace }
+  "("                   { \_ -> TokenLPar }
+  ")"                   { \_ -> TokenRPar }
+  ":"                   { \_ -> TokenColon }
+  ","                   { \_ -> TokenComma }
+  "->"                  { \_ -> TokenArrow }
 
-  ":"                   { \s -> TokenColon }
-  "."                   { \s -> TokenDot }
-  ","                   { \s -> TokenComma }
-  "=="                  { \s -> TokenEquals }
-  "="                   { \s -> TokenAssign }
-  "->"                  { \s -> TokenArrow }
-  "&&"                  { \s -> TokenAnd }
-  "||"                  { \s -> TokenOr }
-  "!="                  { \s -> TokenDistinct }
-  "!"                   { \s -> TokenNot }
-
-  $upper$alphanum*      { \s -> TokenType s }
-  $lower$alphanum*      { \s -> TokenIdent s }
+  $upper$alphanum*      { \s -> TokenIdent s }    -- tipos si usas identificadores con mayúscula
+  $lower$alphanum*      { \s -> TokenIdent s }    -- tipos si usas identificadores con mayúscula
   $digit+               { \s -> TokenNumber (read s) }
-  \"($stringChar|$escape)*\"  { \s -> TokenString (init (tail s)) }
+  $string               { \s -> TokenString (read s) }
+  \"($string|$escape)*\"  { \s -> TokenString (init (tail s)) }
+
+  .                     { \s -> error ("Unexpected character: " ++ show s) }
 
 
 {
@@ -64,27 +56,21 @@ data Token
   | TokenObject
   | TokenUnlock
   | TokenElements
-  | TokenInit
-  | TokenActions
-  | TokenAs
-  | TokenReturn
+  | TokenOnUse
+  | TokenIf
   | TokenShow
-  | TokenTrue
-  | TokenFalse
-  | TokenNumberType
-  | TokenMessageType
+  | TokenLocked
+  | TokenUnlocked
+  | TokenIs
+  | TokenAnd
+  | TokenOr
 
   | TokenLBrace | TokenRBrace
-  | TokenLBracket | TokenRBracket
   | TokenLPar | TokenRPar
-  | TokenColon | TokenComma | TokenAssign
-  | TokenEquals | TokenArrow
-  | TokenDistinct | TokenDot
-
-  | TokenAnd | TokenOr | TokenNot
+  | TokenColon | TokenComma
+  | TokenArrow
 
   | TokenIdent String
-  | TokenType String
   | TokenNumber Int
   | TokenString String
   deriving (Show, Eq)

@@ -1,57 +1,58 @@
-target FigureContainer {
-     elements: [
-      Figure figure1,
-      Figure figure2,
-      Figure figure3,
-      Figure figure4
-     ]
-     unlock: [ figure1.figurenumber == 1, figure2.figurenumber == 2, figure3.figurenumber == 3, figure4.figurenumber == 4]
-     actions: [ setfigure1(Figure f) -> figure1 = f,
-                setfigure2(Figure f) -> figure2 = f,
-                setfigure3(Figure f) -> figure3 = f,
-                setfigure4(Figure f) -> figure4 = f]
+target figurecontainer {
+     unlock: 4273
 }
 
-object Figure {
-    elements: [
-	    number figurenumber
-	  ]
-    init: [figurenumber = 0]
-    actions: [
-	    setnumber(number n) -> figurenumber = n
-    ]
+object elephant {
+     onuse {
+      show "3"
+     }
 }
 
-object Picture {
-    elements: [
-       message text
-    ]
-    init: [text = "Horse, Dog, Lion, Elephant"]
-    actions: [
-      look() -> show text
-    ]
+object lion {
+    onuse {
+      show "7"
+    }
 }
 
-object Box {
-    elements: [
-      Figure elephant,
-      Figure lion,
-      Figure horse,
-      Figure dog
-    ]
-    init: [horse.init(), lion.init(), horse.init(), dog.init()]
-    actions: [
-      takeElephant() as Figure -> return elephant,
-      takeLion() as Figure -> return lion,
-      takeHorse() as Figure -> return horse,
-      takeDog() as Figure -> return dog
-    ]
+object dog {
+    onuse {
+      show "2"
+    }
+}
+
+object horse {
+    onuse {
+      show "4"
+    }
+}
+
+object picture {
+    onuse {
+      show "Horse, Dog, Lion, Elephant"
+    }
+}
+
+object box {
+    elements {
+      elephant,
+      lion,
+      horse,
+      dog
+    }
+
+    onuse {
+      show elephant,
+      show lion,
+      show horse,
+      show dog
+    }
+    
+    
 }
 
 game {
-  elements: [
-    Box box,
-    Picture picture,
-    FigureContainer container 
-  ]
+    box,
+    picture,
+    container
+
 }

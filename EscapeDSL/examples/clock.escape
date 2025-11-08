@@ -1,37 +1,34 @@
-target Door {
-    elements: [
-        Clock clock
-    ]
-    init: []
-    unlock: [ clock.hour == 3, clock.minute == 30 ]
+target maindoor {
+    unlock: 438
 }
 
-object Clock {
-    elements: [
-        number hour,
-        number minute
-    ]
-    init: [ hour = 0, minute = 0 ]
-    actions: [
-        sethour(number h) -> hour = h,
-        setminute(number m) -> minute = m
-    ]
+target hour {
+    unlock: 3
 }
 
-object Note {
-    elements: [
-        message text
-    ]
-    init: [ text = "Ajustá el reloj a 3:30 para abrir la puerta." ]
-    actions: [
-        read() -> show text
-    ]
+target minute {
+    unlock: 30
+}
+
+object Wallclock {
+    elements {
+        hour,
+        minute
+    }
+
+    onuse {
+        if hour is unlocked and minute is unlocked -> show "the door key is 438"
+    }
+}
+
+object hint {
+    onuse {
+        show "Adjust the watch to 3:30 to open the door"
+    }
 }
 
 game {
-    elements: [
-        Door mainDoor,
-        Clock wallClock,
-        Note hint
-    ]
+   maindoor,
+   wallclock,
+   hint
 }

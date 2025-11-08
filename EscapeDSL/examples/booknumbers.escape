@@ -1,47 +1,31 @@
-target PadLock {
-     elements: [number code]
-     init: [ code = 1111 ]
-     unlock: [ code == 1234 ]
-     actions: [ setcode(number n) -> code = n]
+target door {
+    unlock: 1234
 }
 
-target Door {
-    elements: [
-	    PadLock padlock
-	  ]
-     actions: [
-	    setcode(number n) -> padlock.setcode(n)
-    ]
-}
+target oldbook {
+   onuse {
+      if locked -> show "Charles was born on /|/",
+      if unlocked -> show "Charles was born on 1234"
+   }
 
-object OldBook {
-    elements: [
-       message text
-    ]
-    init: [text = "Charles was born in /|/|"]
-    actions: [
-      scrape(Scraper sc) -> text = sc.scrape(),
-      print() -> show text
-    ]
+   unlock: 232
 }
 
 
-object Scraper {
-     actions: [
-	    scrape() as message -> return "Charles was born in 1234"
-     ]
+object scraper {
+     onuse {
+        show "232"
+     }
 }
 
-object Box {
-    elements: [
-      Scraper scraper
-    ]
+object box {
+    elements {
+       scraper
+    }
 }
 
 game {
-  elements: [
-    Door door,
-    OldBook book,
-    Box box
-  ]
+    door,
+    oldbook,
+    box
 }
