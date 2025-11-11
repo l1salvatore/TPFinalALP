@@ -2,22 +2,30 @@
 {-# LANGUAGE GADTs #-}
 module AST where
 
--- Identificadores de Variable
+-- Nombres de objetos
 type ObjectName = String
+-- Mensajes
 type Message = String
+-- Códigos de desbloqueo
 type UnlockCode = Int
--- Los tipos. Pueden ser Message (String), Natural o de un tipo específicado en el DSL (String)
+
+-- Los tipos de objetos pueden ser Target u Objetos normales
 data Type = TTarget | TObject
   deriving (Show, Eq)
 
+-- Modos de mostrar: Mostrar un mensaje o mostrar un objeto
 data ShowMode = ShowMessage Message | ShowObject ObjectName
   deriving (Show, Eq)
--- Comandos (sentencias)
+
+
+-- Las sentencias posibles en el juego
+-- Pueden ser comandos o comandos condicionales
 data Sentence
   = Command Command
   | IfCommand Status Command 
   deriving (Show, Eq)
 
+-- Los comandos posibles
 newtype Command = Show ShowMode
   deriving (Show, Eq)
 
@@ -25,13 +33,13 @@ newtype Command = Show ShowMode
 -- Una lista de definiciones
 type GameDefinition = [Definition]
 
--- El tipo de lass definiciones
+-- Definiciones: Un juego con una lista de objetos o la definición de un objeto con su tipo, nombre y declaraciones
 data Definition = Game [ObjectName]
                 | ObjectDef Type ObjectName [Declaration]
   deriving (Show, Eq)
 
 -- Las declaraciones dentro de una clase
--- Puede contener Unlock, Elements, Init, Actions 
+-- Puede ser un desbloqueo, una lista de elementos o una lista de sentencias que se ejecutan al usar el objeto
 data Declaration = Unlock Int
                  | Elements [ObjectName]
                  | OnUse [Sentence]
