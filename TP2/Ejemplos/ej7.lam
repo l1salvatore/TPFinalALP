@@ -1,2 +1,2 @@
 def suma = \x : Nat.\y : List Nat. \z : List Nat. cons (succ x) y
-def sumPos = \x : List Nat. RL nil (suma) (x)
+def sumPos = \x : List Nat. RL nil suma x

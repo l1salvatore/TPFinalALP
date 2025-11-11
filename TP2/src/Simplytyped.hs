@@ -78,7 +78,7 @@ eval xs (t1 :@: t2) =
         in
             case v1 of
               VLam _ body -> eval xs (sub 0 t2 body)
-              _           -> error "Error de evaluación: se intentó aplicar un valor que no es una función."
+              x           -> error "Error de evaluación: se intentó aplicar un valor que no es una función."
 eval xs (Lam t body) = VLam t body -- Se empaqueta como valor, NO se evalúa el cuerpo.
 -- Caso 3: Variable Libre (Global)
 eval xs (Free n) =
@@ -94,18 +94,18 @@ eval xs (Suc t)    = let v = eval xs t in
                      case v of
                         VNum nv -> VNum (NSuc nv)
                         _       -> error "No es un número"
-eval xs (Rec t1 t2 t3) = 
+eval xs (Rec t1 t2 t3) =
     let v3 = eval xs t3 -- Evalúa el número (call-by-value)
     in
     case v3 of
         VNum NZero -> eval xs t1 -- Caso base
         VNum (NSuc n_val) -> -- n_val es el NumVal anterior
-            let 
+            let
                 t_n = quote (VNum n_val)     -- El término para n
                 t_rec_n = Rec t1 t2 t_n      -- El término para (R t1 t2 n)
             in
                 -- Aplicamos la regla: t2 (R t1 t2 n) n
-                eval xs (t2 :@: t_rec_n :@: t_n) 
+                eval xs (t2 :@: t_rec_n :@: t_n)
         _ -> error "Rec aplicado a un valor que no es un número"
 eval xs Nil        = VList VNil
 eval xs (Cons t ts) = let vs = eval xs ts
@@ -121,14 +121,14 @@ eval xs (RecList t1 t2 t3) =
     in
     case v3 of
         VList VNil -> eval xs t1 -- Caso base
-        VList (VCons n_val l_val) -> 
-            let 
+        VList (VCons n_val l_val) ->
+            let
                 t_l = quote (VList l_val)     -- El término para l
                 t_rec_l = RecList t1 t2 t_l   -- El término para (RList t1 t2 l)
                 t_n = quote (VNum n_val)      -- El término para n
             in
-                -- Aplicamos la regla: t2 (RList t1 t2 l) n l
-                eval xs (t2 :@: t_n :@: t_l :@: t_rec_l :@: t_rec_l ) 
+                -- Aplicamos la regla: t2 n (RList t1 t2 l)  l
+                eval xs (t2 :@: t_n :@: t_l :@: t_rec_l)
         _ -> error "RecList aplicado a un valor que no es una lista"
 
 ----------------------
@@ -193,13 +193,13 @@ infer' c e (Rec t1 t2 t3) = do ty_t3 <- infer' c e t3
 infer' c e Nil = ret ListT
 infer' c e (Cons t ts) = do ty_t <- infer' c e t
                             if ty_t /= NatT then matchError NatT ty_t else
-                             do ty_ts <- infer' c e ts  
+                             do ty_ts <- infer' c e ts
                                 if ty_ts /= ListT then matchError ListT ty_ts else ret ListT
 infer' c e (RecList t1 t2 t3) = do ty_t3 <- infer' c e t3
                                    if ty_t3 /= ListT then matchError ListT ty_t3 else
                                     do ty_t1 <- infer' c e t1
                                        ty_t2 <- infer' c e t2
                                        let expected_ty_t2 = FunT NatT (FunT ListT (FunT ty_t1 ty_t1)) in
-                                        if ty_t2 == expected_ty_t2 then ret ty_t1 else matchError expected_ty_t2 ty_t2    
+                                        if ty_t2 == expected_ty_t2 then ret ty_t1 else matchError expected_ty_t2 ty_t2
 
 
