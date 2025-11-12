@@ -27,6 +27,7 @@ type Sentences = [Sentence]
 type Gamma = (ObjectsMap, TargetsMap)
 newtype M a = M { runM :: StateT Gamma (Either String) a }
 
+
 emptyGamma :: Gamma
 emptyGamma = (Map.empty, Map.empty)
 
@@ -37,7 +38,7 @@ eval_e (o:os) = do es <- eval_e os
 
 eval_o :: [Declaration] -> M (Elements, Sentences)
 eval_o [] = return (Set.empty, [])
-eval_o ((Unlock n):os) = error "Unlock declaration not allowed here"
+eval_o ((Unlock n):os) = M (lift (Left "Unlock declaration not allowed here"))
 eval_o ((Elements e):os) = do (e1, s1) <- eval_o os 
                               es <- (eval_e e)
                               return (Set.union es e1, s1)
