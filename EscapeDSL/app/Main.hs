@@ -2,8 +2,7 @@ module Main (main) where
 
 import Parser.Lexer (alexScanTokens)
 import Parser.Parser (parseEscapeRoom)
-import System.IO (getContents)
-import Eval (eval, emptyGamma, runM)
+import EnvironmentEval (eval, emptyGamma, runM)
 import Control.Monad.State (runStateT)
 
 main :: IO ()
