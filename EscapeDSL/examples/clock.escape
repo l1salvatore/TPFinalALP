@@ -10,7 +10,7 @@ target minute {
     unlock: 30
 }
 
-object Wallclock {
+item Wallclock {
     elements {
         hour,
         minute
@@ -21,7 +21,7 @@ object Wallclock {
     }
 }
 
-object hint {
+item hint {
     onuse {
         show "Adjust the watch to 3:30 to open the door"
     }

@@ -2,37 +2,37 @@ target figurecontainer {
      unlock: 4273
 }
 
-object elephant {
+item elephant {
      onuse {
       show "3"
      }
 }
 
-object lion {
+item lion {
     onuse {
       show "7"
     }
 }
 
-object dog {
+item dog {
     onuse {
       show "2"
     }
 }
 
-object horse {
+item horse {
     onuse {
       show "4"
     }
 }
 
-object picture {
+item picture {
     onuse {
       show "Horse, Dog, Lion, Elephant"
     }
 }
 
-object box {
+item box {
     elements {
       elephant,
       lion,

@@ -14,7 +14,7 @@ import Parser.Lexer
 %token
     game        { TokenGame }
     target      { TokenTarget }
-    object      { TokenObject }
+    item        { TokenItem }
     unlock      { TokenUnlock }
     elements    { TokenElements }
     onuse       { TokenOnUse }
@@ -45,7 +45,7 @@ Definition : game '{' Elements '}'                   { Game $3 }
            | Type ident '{' Declarations '}'         { ObjectDef $1 $2 $4 }
 
 Type : target                                       { TTarget }
-     | object                                       { TObject }
+     | item                                         { TItem }
 
 Declarations : Declaration                           { [$1] }
              | Declarations Declaration              { $1 ++ [$2] }
@@ -58,9 +58,9 @@ Elements : ident                                    { [$1] }
          | Elements ',' Elements                    { $1 ++ $3 }
 
 Sentences : Sentence                                { [$1] }
-          | Sentences ',' Sentence                      { $1 ++ [$3] }
+          | Sentences ',' Sentence                  { $1 ++ [$3] }
 
-Sentence : if Status "->" Command                   { IfCommand $2 $4 }
+Sentence : if Condition "->" Command                { IfCommand $2 $4 }
          | Command                                  { Command $1 }
 
 Command : show ShowMode                             { Show $2 }
@@ -68,13 +68,13 @@ Command : show ShowMode                             { Show $2 }
 ShowMode : ident                                    { ShowObject $1 }
          | string                                   { ShowMessage $1 }
 
-Status : locked                                     { Locked }
-       | unlocked                                   { Unlocked }
-       | ident is locked                            { ObjectLocked $1 }
-       | ident is unlocked                          { ObjectUnlocked $1 }
-       | Status and Status                          { And $1 $3 }
-       | Status or Status                           { Or $1 $3 }
-       | '(' Status ')'                             { $2 }
+Condition : locked                                  { Locked }
+           | unlocked                               { Unlocked }
+           | ident is locked                        { ObjectLocked $1 }
+           | ident is unlocked                      { ObjectUnlocked $1 }
+           | Condition and Condition                { And $1 $3 }
+           | Condition or Condition                 { Or $1 $3 }
+           | '(' Condition ')'                      { $2 }
 
 {
 parseError :: [Token] -> a

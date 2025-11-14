@@ -26,10 +26,15 @@ source-repository head
 library
   exposed-modules:
       AST
+      ConditionsEval
       EnvironmentEval
+      EvalCommon
+      GameExec
       Lib
+      MonadGame
       Parser.Lexer
       Parser.Parser
+      Stack
   other-modules:
       Paths_EscapeDSL
   autogen-modules:

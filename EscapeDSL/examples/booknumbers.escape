@@ -12,13 +12,13 @@ target oldbook {
 }
 
 
-object scraper {
+item scraper {
      onuse {
         show "232"
      }
 }
 
-object box {
+item box {
     elements {
        scraper
     }

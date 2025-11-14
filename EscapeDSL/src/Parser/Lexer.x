@@ -20,7 +20,7 @@ tokens :-
 
   "game"                { \_ -> TokenGame }
   "target"              { \_ -> TokenTarget }
-  "object"              { \_ -> TokenObject }
+  "item"                { \_ -> TokenItem }
   "unlock"              { \_ -> TokenUnlock }
   "elements"            { \_ -> TokenElements }
   "onuse"               { \_ -> TokenOnUse }
@@ -53,7 +53,7 @@ tokens :-
 data Token
   = TokenGame
   | TokenTarget
-  | TokenObject
+  | TokenItem
   | TokenUnlock
   | TokenElements
   | TokenOnUse

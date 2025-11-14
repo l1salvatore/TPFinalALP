@@ -10,7 +10,7 @@ type Message = String
 type UnlockCode = Int
 
 -- Los tipos de objetos pueden ser Target u Objetos normales
-data Type = TTarget | TObject
+data Type = TTarget | TItem
   deriving (Show, Eq)
 
 -- Modos de mostrar: Mostrar un mensaje o mostrar un objeto
@@ -22,7 +22,7 @@ data ShowMode = ShowMessage Message | ShowObject ObjectName
 -- Pueden ser comandos o comandos condicionales
 data Sentence
   = Command Command
-  | IfCommand Status Command 
+  | IfCommand Conditions Command 
   deriving (Show, Eq)
 
 -- Los comandos posibles
@@ -46,5 +46,5 @@ data Declaration = Unlock Int
   deriving (Show, Eq)                   
            
 
-data Status = Locked | Unlocked | ObjectLocked ObjectName | ObjectUnlocked ObjectName | And Status Status | Or Status Status
+data Conditions = Locked | Unlocked | ObjectLocked ObjectName | ObjectUnlocked ObjectName | And Conditions Conditions | Or Conditions Conditions
   deriving (Show, Eq)
