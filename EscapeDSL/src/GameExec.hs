@@ -60,11 +60,16 @@ processUserInput msg = case parseInput msg of
                                             sentences <- getusecommands =<< navigationtop
                                             execute sentences
 runGame :: Gamma ()
-runGame = do msg <- readusercmd
-             processUserInput msg
-             b <- allunlocked
-             if b then printmsg "Congratulations! All objects are unlocked. You have completed the game."
-                  else runGame
-             
-      
-              
+runGame = do showrootgame
+             runGame'
+
+runGame' :: Gamma ()
+runGame' = do msg <- readusercmd
+              case msg of
+                 "quit" -> printmsg "Exiting game. Goodbye!"
+                 "help" -> do printmsg "Available commands:\nselect <object>\nunlock <code>\nback\nuse\nquit"
+                              runGame'
+                 _      -> do processUserInput msg
+                              b <- allunlocked
+                              if b then printmsg "Congratulations! All objects are unlocked. You have completed the game."
+                                  else runGame'

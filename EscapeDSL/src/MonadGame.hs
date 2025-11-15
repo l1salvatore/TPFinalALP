@@ -73,11 +73,25 @@ class MonadGame m where
   -- Obtiene las sentencias de uso de un objeto
   getusecommands :: ObjectName -> m Sentences
   allunlocked :: m Bool
-  
+
+
+
+showrootgame :: Gamma ()
+showrootgame =  do (_, xs) <- Gamma (lift (Sigma get))
+                   case xs of 
+                       Stack ["game"] -> do  i <- Gamma get
+                                             case Map.lookup "game" (fst i) of 
+                                                 Nothing -> throwerror "Game object not found"
+                                                 Just gamedata -> let mainobjects = ielements gamedata
+                                                                  in printmsg ("Game elements: " ++ show mainobjects)
+                                             return ()
+                       Stack (x:_)   -> printmsg ("Current object: " ++ x)
+                       _              -> throwerror "Object stack is empty"
+
 
 instance MonadGame Gamma where
   getobjects = Gamma get
-  getelements obj = do 
+  getelements obj = do
           (itemsmap, targetsmap) <- Gamma get
           case Map.lookup obj itemsmap of
             Just itemdata -> return (ielements itemdata)
@@ -112,7 +126,7 @@ instance MonadGame Gamma where
           case peek objectstack of
             Nothing -> throwerror "Object stack is empty"
             Just o -> return o
-  navigationpush o = do 
+  navigationpush o = do
           (blockmap, objectstack) <- Gamma (lift (Sigma get))
           let newstack = push o objectstack
           Gamma (lift (Sigma (put (blockmap, newstack))))
@@ -120,8 +134,11 @@ instance MonadGame Gamma where
           (blockmap, objectstack) <- Gamma (lift (Sigma get))
           case objectstack of
             Stack ["game"] -> do printmsg "Reached the root"
-                                 return ()
-            _              -> let newstack = pop objectstack in Gamma (lift (Sigma (put (blockmap, newstack))))         
+                                 showrootgame
+            _              -> do let newstack = pop objectstack in                                 
+                                  Gamma (lift (Sigma (put (blockmap, newstack))))    
+                                 showrootgame                                                   
+                                                     
   getlockstatus :: ObjectName -> Gamma BlockData
   getlockstatus o = do
           (blockmap, _) <- Gamma (lift (Sigma get))
