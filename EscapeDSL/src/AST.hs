@@ -26,12 +26,16 @@ data Sentence
   deriving (Show, Eq)
 
 -- Los comandos posibles
+-- TODO: Agregar más comandos si es necesario, como por ejemplo, asignaciones o modificaciones de estado
 newtype Command = Show ShowMode
   deriving (Show, Eq)
 
 -- El tipo de un game definition
 -- Una lista de definiciones
 type GameDefinition = [Definition]
+
+-- Las sentencias es una lista de sentencias
+type Sentences = [Sentence]
 
 -- Definiciones: Un juego con una lista de objetos o la definición de un objeto con su tipo, nombre y declaraciones
 data Definition = Game [ObjectName]
@@ -42,9 +46,10 @@ data Definition = Game [ObjectName]
 -- Puede ser un desbloqueo, una lista de elementos o una lista de sentencias que se ejecutan al usar el objeto
 data Declaration = Unlock Int
                  | Elements [ObjectName]
-                 | OnUse [Sentence]
+                 | OnUse Sentences
   deriving (Show, Eq)                   
            
-
+-- Condiciones para los comandos condicionales. 
+-- Sólamente tomaremos en cuenta si un objeto está bloqueado o desbloqueado
 data Conditions = Locked | Unlocked | ObjectLocked ObjectName | ObjectUnlocked ObjectName | And Conditions Conditions | Or Conditions Conditions
   deriving (Show, Eq)

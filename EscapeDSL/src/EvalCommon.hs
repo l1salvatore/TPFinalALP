@@ -9,7 +9,9 @@ import qualified Data.Set as Set
 import Stack
 
 
-
+-- Definiciones de datos para ítems y objetivos en el entorno Gamma
+-- Para Items , es una función parcial que toma un ObjectName y devuelve su ItemDefData
+-- ItemDefData es un registro con los elementos y las sentencias asociadas al item
 type ItemsMap = Map.Map ObjectName ItemDefData
 data ItemDefData = ItemDefData
   { ielements :: Set.Set ObjectName,
@@ -18,6 +20,8 @@ data ItemDefData = ItemDefData
 emptyItemDefData :: ItemDefData
 emptyItemDefData = ItemDefData Set.empty []
 
+-- Para objetivos, es una función parcial que toma un ObjectName y devuelve su TargetDefData
+-- TargetDefData es un registro con los elementos, las sentencias y el código de desbloqueo asociado al objetivo
 type TargetsMap = Map.Map ObjectName TargetDefData
 data TargetDefData = TargetDefData
   { telements :: Set.Set ObjectName,
@@ -27,8 +31,8 @@ data TargetDefData = TargetDefData
 emptyTargetDefData :: TargetDefData
 emptyTargetDefData = TargetDefData Set.empty [] 0
 
+-- Los elementos es un conjunto de nombres de objetos
 type Elements = Set.Set ObjectName
-type Sentences = [Sentence]
 
 -- El entorno Gamma: un par de mapas, uno para ítems y otro para objetivos
 type Objects = (ItemsMap, TargetsMap)
