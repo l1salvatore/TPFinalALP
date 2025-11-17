@@ -66,6 +66,5 @@ main = do
                         Left errMsg -> putStrLn $ "Error during game: " ++ errMsg
                         Right (((), _), finalGameState) -> do
                             putStrLn "Game run successful."
-                            print finalGameState -- <-- ¡Ahora esto debería mostrar cambios!
 
         _ -> putStrLn "Usage: ./your-game-executable <game_file.esc>"

@@ -15,6 +15,8 @@ import Control.Monad.Except (ExceptT, throwError, runExceptT)
 import GHC.IO.Handle
 import System.IO
 
+
+-- La mónada Sigma maneja el estado del juego (GameState) y errores en IO 
 newtype Sigma a = Sigma { runSigma :: StateT GameState (ExceptT String IO) a }
 
 instance Functor Sigma where
@@ -28,6 +30,7 @@ instance Monad Sigma where
   return = pure
   (Sigma ma) >>= f = Sigma (ma >>= \a -> runSigma (f a))
 
+-- La mónada Gamma maneja el entorno de objetos (Objects) y usa Sigma para el estado del juego y errores
 newtype Gamma a = Gamma { runGamma :: StateT Objects Sigma a }
 
 instance Functor Gamma where
@@ -39,7 +42,11 @@ instance Monad Gamma where
   return = pure
   (Gamma ma) >>= f = Gamma (ma >>= \a -> runGamma (f a))
 
+-- Además, definimos la clase MonadGame que encapsula las operaciones necesarias para evaluar y ejecutar el juego
 class MonadGame m where
+  -- Verifica que todos los elementos estén definidos en el entorno Gamma
+  -- Lleva un acumulador de elementos no definidos
+  checkdefinition :: Elements -> [ObjectName] -> m ()
   -- Extrae el entorno actual Gamma
   getobjects :: m Objects
   -- Inserta un objeto común en el entorno Gamma
@@ -72,8 +79,8 @@ class MonadGame m where
   unlock :: ObjectName -> m ()
   -- Obtiene las sentencias de uso de un objeto
   getusecommands :: ObjectName -> m Sentences
+  -- Verifica si todos los objetos están desbloqueados
   allunlocked :: m Bool
-
 
 
 showrootgame :: Gamma ()
@@ -89,7 +96,19 @@ showrootgame =  do (_, xs) <- Gamma (lift (Sigma get))
                        _              -> throwerror "Object stack is empty"
 
 
+
 instance MonadGame Gamma where
+  checkdefinition elems xs = do
+          if (elems == Set.empty)
+            then if (null xs)
+                   then return ()
+                   else throwerror ("The following elements are not defined: " ++ show xs)
+            else let first = Set.findMin elems
+                     rest = Set.deleteMin elems
+                 in do objects <- getobjects
+                       if (first `Map.member` (fst objects) || first `Map.member` (snd objects))
+                         then checkdefinition rest xs
+                         else checkdefinition rest (first : xs) 
   getobjects = Gamma get
   getelements obj = do
           (itemsmap, targetsmap) <- Gamma get
@@ -98,7 +117,7 @@ instance MonadGame Gamma where
             Nothing -> case Map.lookup obj targetsmap of
                          Just targetdata -> return (telements targetdata)
                          Nothing -> throwerror ("Object " ++ obj ++ " not found")
-  putitem o d g = Gamma (put (Data.Bifunctor.first (Map.insert o (ObjectDefData e s)) g))
+  putitem o d g = Gamma (put (Data.Bifunctor.first (Map.insert o (ItemDefData e s)) g))
     where
       e = ielements d
       s = isentences d
@@ -116,7 +135,6 @@ instance MonadGame Gamma where
     | null s1 = return s2
     | null s2 = return s1
     | otherwise = throwerror "Duplicate onuse declaration"
-  maxunlockcodes :: UnlockCode -> UnlockCode -> Gamma UnlockCode
   maxunlockcodes k1 k2
     | k1 == 0 = return k2
     | k2 == 0 = return k1
@@ -137,9 +155,7 @@ instance MonadGame Gamma where
                                  showrootgame
             _              -> do let newstack = pop objectstack in                                 
                                   Gamma (lift (Sigma (put (blockmap, newstack))))    
-                                 showrootgame                                                   
-                                                     
-  getlockstatus :: ObjectName -> Gamma BlockData
+                                 showrootgame                                                                                                     
   getlockstatus o = do
           (blockmap, _) <- Gamma (lift (Sigma get))
           case Map.lookup o blockmap of
@@ -148,7 +164,6 @@ instance MonadGame Gamma where
   printmsg msg = Gamma (lift (Sigma (lift (lift (putStrLn msg)))))
   readusercmd = do Gamma (lift (Sigma (lift (lift (putStr ">")))))
                    Gamma (lift (Sigma (lift (lift (do hFlush stdout; getLine)))))
-  unlock :: ObjectName -> Gamma ()
   unlock o = do
           (blockmap, objectstack) <- Gamma (lift (Sigma get))
           let newblockmap = Map.insert o VUnlock blockmap

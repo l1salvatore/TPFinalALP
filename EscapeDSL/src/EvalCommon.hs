@@ -11,12 +11,12 @@ import Stack
 
 
 type ItemsMap = Map.Map ObjectName ItemDefData
-data ItemDefData = ObjectDefData
+data ItemDefData = ItemDefData
   { ielements :: Set.Set ObjectName,
     isentences :: [Sentence]
   } deriving (Show, Eq)
 emptyItemDefData :: ItemDefData
-emptyItemDefData = ObjectDefData Set.empty []
+emptyItemDefData = ItemDefData Set.empty []
 
 type TargetsMap = Map.Map ObjectName TargetDefData
 data TargetDefData = TargetDefData

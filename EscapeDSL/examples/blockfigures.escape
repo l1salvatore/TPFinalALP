@@ -53,6 +53,6 @@ item box {
 game {
     box,
     picture,
-    container
+    figurecontainer
 
 }

@@ -22,6 +22,10 @@ item box {
     elements {
        scraper
     }
+
+    onuse {
+      show scraper
+    }
 }
 
 game {

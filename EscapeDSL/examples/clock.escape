@@ -17,6 +17,8 @@ item Wallclock {
     }
 
     onuse {
+        if hour is locked -> show hour,
+        if minute is locked -> show minute,
         if hour is unlocked and minute is unlocked -> show "the door key is 438"
     }
 }
@@ -29,6 +31,6 @@ item hint {
 
 game {
    maindoor,
-   wallclock,
+   Wallclock,
    hint
 }

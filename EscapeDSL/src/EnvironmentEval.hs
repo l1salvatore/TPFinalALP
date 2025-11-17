@@ -20,6 +20,7 @@ evalI ((Unlock _):_) = throwerror "Unlock declaration not allowed here"
 evalI ((Elements e):os) = do itemdata <- evalI os
                              k <- evalE e
                              elements <- unionelements k (ielements itemdata)
+                             checkdefinition elements []
                              return (itemdata { ielements = elements })
 evalI ((OnUse s):os) = do itemdata <- evalI os
                           sentences <- unionsentences s (isentences itemdata)
@@ -34,6 +35,7 @@ evalT ((Unlock n):os) = do targetdata <- evalT os
 evalT ((Elements e):os) = do targetdata <- evalT os
                              k <- evalE e
                              elements <- unionelements k (telements targetdata)
+                             checkdefinition elements []
                              return (targetdata { telements = elements })
 evalT ((OnUse s):os) = do targetdata <- evalT os
                           sentences <- unionsentences s (tsentences targetdata)
