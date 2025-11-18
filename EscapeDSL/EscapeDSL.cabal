@@ -27,10 +27,10 @@ library
   exposed-modules:
       AST
       Eval
-      EvalCommon
+      EvalModel
       GameExec
       Lib
-      MonadGame
+      GameMonads
       Parser.Lexer
       Parser.Parser
       Stack

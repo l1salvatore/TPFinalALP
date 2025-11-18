@@ -2,8 +2,8 @@
 module GameExec where
 
 import AST
-import EvalCommon
-import MonadGame
+import EvalModel
+import GameMonads
 import Control.Monad (when)
 import Eval
 import qualified Data.Set as Set
@@ -38,13 +38,13 @@ processUserInput :: String -> Gamma ()
 processUserInput msg = case parseInput msg of
                Nothing -> printmsg "Invalid command"
                Just cmd -> case cmd of
-                             InputSelect obj -> do current <- navigationtop
+                             InputSelect obj -> do current <- objectNavigationTop
                                                    elements <- getelements current
                                                    if Set.member obj elements
-                                                     then do navigationpush obj
+                                                     then do objectNavigationPush obj
                                                              printmsg ("Selected object: " ++ obj)
                                                      else printmsg ("Object " ++ obj ++ " not found in current context")
-                             InputUnlock inputcode -> do current <- navigationtop
+                             InputUnlock inputcode -> do current <- objectNavigationTop
                                                          (_, targetsmap) <- getobjects
                                                          case Map.lookup current targetsmap of
                                                             Nothing -> printmsg ("Current object " ++ current ++ " is not a target")
@@ -54,9 +54,9 @@ processUserInput msg = case parseInput msg of
                                                                                           unlock current
                                                                                   else printmsg ("Incorrect unlock code for object " ++ current)
                              InputBack -> do printmsg "Going back"
-                                             navigationpop
+                                             objectNavigationPop
                              InputUse -> do printmsg "Using current object"
-                                            sentences <- getusecommands =<< navigationtop
+                                            sentences <- getusecommands =<< objectNavigationTop
                                             execute sentences
 runGame :: Gamma ()
 runGame = do showrootgame

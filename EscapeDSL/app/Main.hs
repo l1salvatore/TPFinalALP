@@ -1,14 +1,14 @@
 import Parser.Lexer (alexScanTokens)
 import Parser.Parser (parseEscapeRoom)
-import Eval (eval)
-import EvalCommon
-import MonadGame (runGamma, runSigma, Gamma (runGamma), Sigma (Sigma))
+import Eval (collectObjects)
+import EvalModel
+import GameMonads (runGamma, runSigma, Gamma (runGamma), Sigma (Sigma))
 import GameExec (runGame)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.State (runStateT)
 import System.Environment (getArgs)
-import qualified Data.Map as Map -- <-- Necesitarás esto
-import Stack (Stack(Stack)) -- <-- Y esto
+import qualified Data.Map as Map 
+import Stack (Stack(Stack))
 
 main :: IO ()
 main = do
@@ -23,9 +23,9 @@ main = do
             -- ETAPA 1: Ejecutar 'eval' para obtener los 'Objects'
             -- ----------------------------------------------------
             
-            -- 'eval ast' es de tipo Gamma ()
+            -- 'collectObjects ast' es de tipo Gamma ()
             -- Lo corremos con un estado Gamma (Objects) vacío
-            let (Sigma sigmaActionForEval) = runStateT (runGamma (eval ast)) emptyObjects
+            let (Sigma sigmaActionForEval) = runStateT (runGamma (collectObjects ast)) emptyObjects
 
             -- Para correr esta acción de Sigma, necesitamos un GameState "dummy".
             -- No importa, porque 'eval' (idealmente) no debería tocar el GameState.

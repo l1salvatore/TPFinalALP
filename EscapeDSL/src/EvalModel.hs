@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE InstanceSigs #-}
-module EvalCommon where
+module EvalModel where
 
 import AST
 import qualified Data.Map as Map
@@ -34,10 +34,10 @@ emptyTargetDefData = TargetDefData Set.empty [] 0
 -- Los elementos es un conjunto de nombres de objetos
 type Elements = Set.Set ObjectName
 
--- El entorno Gamma: un par de mapas, uno para ítems y otro para objetivos
+-- El mapa de objetos: un par de mapas, uno para ítems y otro para objetivos
 type Objects = (ItemsMap, TargetsMap)
 
--- El entorno Gamma vacío, el estado inicial
+-- El mapa de objetos vacío, el estado inicial
 emptyObjects :: Objects
 emptyObjects = (Map.empty, Map.empty)
 
