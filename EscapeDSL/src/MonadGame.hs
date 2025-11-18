@@ -46,7 +46,7 @@ instance Monad Gamma where
 class MonadGame m where
   -- Verifica que todos los elementos estén definidos en el entorno Gamma
   -- Lleva un acumulador de elementos no definidos
-  checkdefinition :: Elements -> [ObjectName] -> m ()
+  checkdefinition :: ObjectName -> m ()
   -- Extrae el entorno actual Gamma
   getobjects :: m Objects
   -- Inserta un objeto común en el entorno Gamma
@@ -82,12 +82,11 @@ class MonadGame m where
   -- Verifica si todos los objetos están desbloqueados
   allunlocked :: m Bool
 
-
 showrootgame :: Gamma ()
 showrootgame =  do (_, xs) <- Gamma (lift (Sigma get))
-                   case xs of 
+                   case xs of
                        Stack ["game"] -> do  i <- Gamma get
-                                             case Map.lookup "game" (fst i) of 
+                                             case Map.lookup "game" (fst i) of
                                                  Nothing -> throwerror "Game object not found"
                                                  Just gamedata -> let mainobjects = ielements gamedata
                                                                   in printmsg ("Game elements: " ++ show mainobjects)
@@ -98,17 +97,11 @@ showrootgame =  do (_, xs) <- Gamma (lift (Sigma get))
 
 
 instance MonadGame Gamma where
-  checkdefinition elems xs = do
-          if (elems == Set.empty)
-            then if (null xs)
-                   then return ()
-                   else throwerror ("The following elements are not defined: " ++ show xs)
-            else let first = Set.findMin elems
-                     rest = Set.deleteMin elems
-                 in do objects <- getobjects
-                       if (first `Map.member` (fst objects) || first `Map.member` (snd objects))
-                         then checkdefinition rest xs
-                         else checkdefinition rest (first : xs) 
+  checkdefinition element = do
+          (itemsmap, targetsmap) <- Gamma get
+          if Map.member element itemsmap || Map.member element targetsmap
+            then return ()
+            else throwerror ("Element " ++ element ++ " is not defined")
   getobjects = Gamma get
   getelements obj = do
           (itemsmap, targetsmap) <- Gamma get
@@ -153,9 +146,9 @@ instance MonadGame Gamma where
           case objectstack of
             Stack ["game"] -> do printmsg "Reached the root"
                                  showrootgame
-            _              -> do let newstack = pop objectstack in                                 
-                                  Gamma (lift (Sigma (put (blockmap, newstack))))    
-                                 showrootgame                                                                                                     
+            _              -> do let newstack = pop objectstack in
+                                  Gamma (lift (Sigma (put (blockmap, newstack))))
+                                 showrootgame
   getlockstatus o = do
           (blockmap, _) <- Gamma (lift (Sigma get))
           case Map.lookup o blockmap of

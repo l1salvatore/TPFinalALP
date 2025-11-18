@@ -1,6 +1,6 @@
 import Parser.Lexer (alexScanTokens)
 import Parser.Parser (parseEscapeRoom)
-import EnvironmentEval (eval)
+import Eval (eval)
 import EvalCommon
 import MonadGame (runGamma, runSigma, Gamma (runGamma), Sigma (Sigma))
 import GameExec (runGame)

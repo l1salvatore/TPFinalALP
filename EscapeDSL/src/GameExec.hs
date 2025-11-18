@@ -4,8 +4,8 @@ module GameExec where
 import AST
 import EvalCommon
 import MonadGame
-import ConditionsEval
 import Control.Monad (when)
+import Eval
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 
@@ -17,7 +17,7 @@ execute :: Sentences -> Gamma ()
 execute [] = return ()
 execute ((Command c):xs) = do executeCmd c
                               execute xs
-execute ((IfCommand cond c):xs) = do b <- ceval cond
+execute ((IfCommand cond c):xs) = do b <- evalCond cond
                                      when b $ executeCmd c
                                      execute xs
 
@@ -45,8 +45,7 @@ processUserInput msg = case parseInput msg of
                                                              printmsg ("Selected object: " ++ obj)
                                                      else printmsg ("Object " ++ obj ++ " not found in current context")
                              InputUnlock inputcode -> do current <- navigationtop
-                                                         objects <- getobjects
-                                                         let (_, targetsmap) = objects
+                                                         (_, targetsmap) <- getobjects
                                                          case Map.lookup current targetsmap of
                                                             Nothing -> printmsg ("Current object " ++ current ++ " is not a target")
                                                             Just targetdata -> let requiredcode = code targetdata
