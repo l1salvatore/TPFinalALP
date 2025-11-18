@@ -1,6 +1,4 @@
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE InstanceSigs #-}
 module GameMonads where
 
 import AST
@@ -11,9 +9,10 @@ import Control.Monad (ap)
 import qualified Data.Bifunctor
 import Stack
 import EvalModel
-import Control.Monad.Except (ExceptT, throwError, runExceptT)
+import Control.Monad.Except (ExceptT, throwError)
 import GHC.IO.Handle
 import System.IO
+import PrettyPrinter
 
 
 -- La mónada Sigma maneja el estado del juego (GameState) y errores en IO 
@@ -48,8 +47,11 @@ class MonadError m where
 
 -- La clase MonadGameIO maneja las operaciones de entrada/salida del juego
 class MonadGameIO m where
-  printmsg :: String -> m ()
+  -- Toma un pretty printer de a, un elemento de tipo a y aplica el prettyprinter a ese elemento
+  applyprettyprinter :: (a -> IO ()) -> a -> m ()
+  -- Lee el comando de usuario
   readusercmd :: m String
+  -- Muestra el juego raiz
   showrootgame :: m ()
 
 -- Definimos la clase MonadGameState que maneja las operaciones necesarias para el estado del juego
@@ -98,8 +100,8 @@ instance MonadError Gamma where
 
 
 instance MonadGameIO Gamma where
-  printmsg msg = Gamma (lift (Sigma (lift (lift (putStrLn msg)))))
-  readusercmd = do Gamma (lift (Sigma (lift (lift (putStr ">")))))
+  applyprettyprinter f x = Gamma (lift (Sigma (lift (lift (f x)))))
+  readusercmd = do applyprettyprinter putStr ">" 
                    Gamma (lift (Sigma (lift (lift (do hFlush stdout; getLine)))))
   showrootgame =  do (_, xs) <- Gamma (lift (Sigma get))
                      case xs of
@@ -107,9 +109,9 @@ instance MonadGameIO Gamma where
                                               case Map.lookup "game" (fst i) of
                                                   Nothing -> throwException "Game object not found"
                                                   Just gamedata -> let mainobjects = ielements gamedata
-                                                                    in printmsg ("Game elements: " ++ show mainobjects)
+                                                                    in applyprettyprinter ppElements mainobjects 
                                               return ()
-                        Stack (x:_)   -> printmsg ("Current object: " ++ x)
+                        Stack (x:_)    -> applyprettyprinter ppCurrentObject x
                         _              -> throwException "Object stack is empty"
 
 
@@ -128,7 +130,7 @@ instance MonadGameState Gamma where
   objectNavigationPop = do
           (blockmap, objectstack) <- Gamma (lift (Sigma get))
           case objectstack of
-            Stack ["game"] -> do printmsg "Reached the root"
+            Stack ["game"] -> do applyprettyprinter ppMessage "Reached the root"
                                  showrootgame
             _              -> do let newstack = pop objectstack in
                                   Gamma (lift (Sigma (put (blockmap, newstack))))

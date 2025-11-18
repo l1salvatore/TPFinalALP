@@ -6,12 +6,13 @@ import EvalModel
 import GameMonads
 import Control.Monad (when)
 import Eval
+import PrettyPrinter
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 
 executeCmd :: Command -> Gamma ()
-executeCmd (Show (ShowMessage msg)) = printmsg msg
-executeCmd (Show (ShowObject obj)) = printmsg ("Showing object: " ++ obj)
+executeCmd (Show (ShowMessage msg)) = applyprettyprinter ppMessage msg
+executeCmd (Show (ShowObject obj)) = applyprettyprinter ppShowObject obj
 
 execute :: Sentences -> Gamma ()
 execute [] = return ()
@@ -36,39 +37,41 @@ parseInput input = case words input of
 
 processUserInput :: String -> Gamma ()
 processUserInput msg = case parseInput msg of
-               Nothing -> printmsg "Invalid command"
+               Nothing -> applyprettyprinter ppMessage "Invalid command"
                Just cmd -> case cmd of
                              InputSelect obj -> do current <- objectNavigationTop
                                                    elements <- getelements current
                                                    if Set.member obj elements
                                                      then do objectNavigationPush obj
-                                                             printmsg ("Selected object: " ++ obj)
-                                                     else printmsg ("Object " ++ obj ++ " not found in current context")
+                                                             applyprettyprinter ppSelectObject obj
+                                                     else applyprettyprinter (ppUserError ObjectNotFound) obj
                              InputUnlock inputcode -> do current <- objectNavigationTop
                                                          (_, targetsmap) <- getobjects
                                                          case Map.lookup current targetsmap of
-                                                            Nothing -> printmsg ("Current object " ++ current ++ " is not a target")
+                                                            Nothing -> applyprettyprinter (ppUserError CurrentObjectNotTarget)  current
                                                             Just targetdata -> let requiredcode = code targetdata
                                                                                in if inputcode == requiredcode
-                                                                                  then do printmsg ("Unlocked object " ++ current)
+                                                                                  then do applyprettyprinter ppUnlockObject current
                                                                                           unlock current
-                                                                                  else printmsg ("Incorrect unlock code for object " ++ current)
-                             InputBack -> do printmsg "Going back"
+                                                                                  else  applyprettyprinter (ppUserError IncorrectLockCode)  current
+                             InputBack -> do applyprettyprinter ppMessage "Going back"
                                              objectNavigationPop
-                             InputUse -> do printmsg "Using current object"
+                             InputUse -> do applyprettyprinter ppMessage "Using current object"
                                             sentences <- getusecommands =<< objectNavigationTop
                                             execute sentences
 runGame :: Gamma ()
-runGame = do showrootgame
+runGame = do applyprettyprinter ppMessage "Welcome to escape room"
+             applyprettyprinter ppMessage "Available commands:\nselect <object>\nunlock <code>\nback\nuse\nquit"
+             showrootgame
              runGame'
 
 runGame' :: Gamma ()
 runGame' = do msg <- readusercmd
               case msg of
-                 "quit" -> printmsg "Exiting game. Goodbye!"
-                 "help" -> do printmsg "Available commands:\nselect <object>\nunlock <code>\nback\nuse\nquit"
+                 "quit" -> applyprettyprinter ppMessage "Exiting game. Goodbye!"
+                 "help" -> do applyprettyprinter ppMessage "Available commands:\nselect <object>\nunlock <code>\nback\nuse\nquit"
                               runGame'
                  _      -> do processUserInput msg
                               b <- allunlocked
-                              if b then printmsg "Congratulations! All objects are unlocked. You have completed the game."
+                              if b then applyprettyprinter ppMessage "Congratulations! All objects are unlocked. You have completed the game."
                                   else runGame'

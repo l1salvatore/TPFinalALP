@@ -29,10 +29,11 @@ library
       Eval
       EvalModel
       GameExec
-      Lib
       GameMonads
+      Lib
       Parser.Lexer
       Parser.Parser
+      PrettyPrinter
       Stack
   other-modules:
       Paths_EscapeDSL

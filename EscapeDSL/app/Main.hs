@@ -34,7 +34,7 @@ main = do
             -- Corremos la pila de 'eval'
             evalResult <- runExceptT (runStateT sigmaActionForEval dummyGameState)
 
-            -- Revisamos si 'eval' falló
+            -- Revisamos si 'collectObjects' falló
             case evalResult of
                 Left errMsg -> putStrLn $ "Error during evaluation: " ++ errMsg
                 
@@ -64,7 +64,7 @@ main = do
                     -- 5. Manejamos el resultado final del juego
                     case gameResult of
                         Left errMsg -> putStrLn $ "Error during game: " ++ errMsg
-                        Right (((), _), finalGameState) -> do
+                        Right (((), _), _) -> do
                             putStrLn "Game run successful."
 
         _ -> putStrLn "Usage: ./your-game-executable <game_file.esc>"

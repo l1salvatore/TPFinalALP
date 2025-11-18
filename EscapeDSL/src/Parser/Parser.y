@@ -32,7 +32,7 @@ import Parser.Lexer
     ':'         { TokenColon }
     ','         { TokenComma }
     "->"        { TokenArrow }
-    ident       { TokenIdent $$ }
+    objectname  { TokenIdent $$ }
     number      { TokenNumber $$ }
     string      { TokenString $$ }
 
@@ -42,10 +42,10 @@ GameDefinition : Definition                          { [$1] }
                | GameDefinition Definition           { $1 ++ [$2] }
 
 Definition : game '{' Elements '}'                   { Game $3 }
-           | Type ident '{' Declarations '}'         { ObjectDef $1 $2 $4 }
+           | Type objectname '{' Declarations '}'    { ObjectDef $1 $2 $4 }
 
-Type : target                                       { TTarget }
-     | item                                         { TItem }
+Type : target                                        { TTarget }
+     | item                                          { TItem }
 
 Declarations : Declaration                           { [$1] }
              | Declarations Declaration              { $1 ++ [$2] }
@@ -54,7 +54,7 @@ Declaration : unlock ':' number                      { Unlock $3 }
             | elements '{' Elements '}'              { Elements $3 }
             | onuse '{' Sentences '}'                { OnUse $3 }
 
-Elements : ident                                    { [$1] }
+Elements : objectname                               { [$1] }
          | Elements ',' Elements                    { $1 ++ $3 }
 
 Sentences : Sentence                                { [$1] }
@@ -65,13 +65,13 @@ Sentence : if Condition "->" Command                { IfCommand $2 $4 }
 
 Command : show ShowMode                             { Show $2 }
 
-ShowMode : ident                                    { ShowObject $1 }
+ShowMode : objectname                               { ShowObject $1 }
          | string                                   { ShowMessage $1 }
 
 Condition : locked                                  { Locked }
            | unlocked                               { Unlocked }
-           | ident is locked                        { ObjectLocked $1 }
-           | ident is unlocked                      { ObjectUnlocked $1 }
+           | objectname is locked                   { ObjectLocked $1 }
+           | objectname is unlocked                 { ObjectUnlocked $1 }
            | Condition and Condition                { And $1 $3 }
            | Condition or Condition                 { Or $1 $3 }
            | '(' Condition ')'                      { $2 }
