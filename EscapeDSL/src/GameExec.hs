@@ -57,11 +57,17 @@ processUserInput msg = case parseInput msg of
                              InputBack -> do applyprettyprinter ppMessage "Going back"
                                              objectNavigationPop
                              InputUse -> do applyprettyprinter ppMessage "Using current object"
-                                            sentences <- getusecommands =<< objectNavigationTop
+                                            current <- objectNavigationTop
+                                            do (_, targetsmap) <- getobjects
+                                               case Map.lookup current targetsmap of
+                                                     Nothing -> return ()
+                                                     Just _ -> do status <- getLockStatus current
+                                                                  when (status == VLock) $ applyprettyprinter ppMessage "It seems this object has an unlock mechanism."
+                                            sentences <- getusecommands current
                                             execute sentences
 runGame :: Gamma ()
 runGame = do applyprettyprinter ppMessage "Welcome to escape room"
-             applyprettyprinter ppMessage "Available commands:\nselect <object>\nunlock <code>\nback\nuse\nquit"
+             applyprettyprinter (const ppShowMenu) ()
              showrootgame
              runGame'
 
@@ -69,7 +75,7 @@ runGame' :: Gamma ()
 runGame' = do msg <- readusercmd
               case msg of
                  "quit" -> applyprettyprinter ppMessage "Exiting game. Goodbye!"
-                 "help" -> do applyprettyprinter ppMessage "Available commands:\nselect <object>\nunlock <code>\nback\nuse\nquit"
+                 "help" -> do applyprettyprinter (const ppShowMenu) ()
                               runGame'
                  _      -> do processUserInput msg
                               b <- allunlocked

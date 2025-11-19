@@ -72,16 +72,13 @@ class MonadGameState m where
 -- Además, definimos la clase MonadObjectMap que maneja las operaciones necesarias para el mapa de objetos
 class MonadObjectMap m where
   -- Verifica que todos los elementos estén definidos en el entorno Gamma
-  -- Lleva un acumulador de elementos no definidos
   checkdefinition :: ObjectName -> m ()
-  -- Extrae el entorno actual Gamma
+  -- Extrae el mapa de objetos de la mónada Gamma
   getobjects :: m Objects
-  -- Inserta un objeto común en el entorno Gamma
+  -- Inserta un item en el mapa de objetos de la mónada Gamma
   putitem :: ObjectName -> ItemDefData -> Objects -> m ()
-  -- Inserts a objetivo co
+  -- Inserts a objetivo en el mapa de objetos de la mónada Gamma
   puttarget :: ObjectName -> TargetDefData -> Objects -> m ()
-  -- -- Throws an error with a message
-  -- throwerror :: String -> m a
   -- Union de dos conjuntos de elementos, lanzando error si hay declaración duplicada
   unionelements :: Elements -> Elements -> m Elements
   -- Union de dos listas de sentencias, lanzando error si hay declaración duplicada

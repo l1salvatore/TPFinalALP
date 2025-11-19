@@ -1,0 +1,35 @@
+
+item Diamond {
+    onuse {
+        show "A shiny diamond!"
+    }
+}
+
+target SmallChest {
+    unlock: 77
+    elements {
+        Diamond
+    }
+    onuse {
+        if WallSafe is locked -> show "You cannot reach this yet.",
+        if locked -> show "A small chest inside the safe.",
+        if unlocked -> show Diamond
+    }
+}
+
+
+
+target WallSafe {
+    unlock: 5555
+    elements {
+        SmallChest
+    }
+    onuse {
+        if locked -> show "It requires a 4-digit pin.",
+        if unlocked -> show SmallChest
+    }
+}
+
+game {
+    WallSafe
+}

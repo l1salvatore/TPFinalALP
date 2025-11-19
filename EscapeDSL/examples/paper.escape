@@ -1,0 +1,19 @@
+target MainDoor {
+    unlock: 1234
+    onuse {
+        if locked -> show "The door is locked tight.",
+        if unlocked -> show "The door is open. You can leave."
+    }
+}
+
+item OldPaper {
+    onuse {
+        show "The code is 1234"
+    }
+
+
+}
+game {
+    MainDoor,
+    OldPaper
+}

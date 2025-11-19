@@ -38,6 +38,15 @@ ppUnlockObject :: ObjectName -> IO ()
 ppUnlockObject o = do putStr "Unlocked Object: "
                       putStrLn o
 
+ppShowMenu :: IO ()
+ppShowMenu = do putStrLn "Available commands:"
+                putStrLn " select <object_name>  -- Select an object from the current object's elements"
+                putStrLn " unlock <code>         -- Unlock the current object with the provided code"
+                putStrLn " back                  -- Go back to the previous object"
+                putStrLn " use                   -- Use the current object"
+                putStrLn " help                  -- Show help"
+                putStrLn " quit                  -- Quit the game"
+
 ppObjList :: [ObjectName] -> IO ()
 ppObjList [x] = do putStr "* "
                    putStrLn x
