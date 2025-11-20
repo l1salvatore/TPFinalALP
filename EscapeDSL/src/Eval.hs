@@ -34,29 +34,33 @@ collectElements [] = return Set.empty -- Retorno el conjunto vacío
 collectElements (o:os) = do es <- collectElements os -- Recolecto la lista restante
                             checkdefinition o -- Chequeo la definición de o, si está declarado
                             return (Set.insert o es) -- Inserto o a la lista restante
-                            
+
 -- Chequeo un sólo comando
 checkCommand :: Command -> Gamma ()
 checkCommand (Show (ShowObject obj)) = checkdefinition obj -- Para las sentencias de la forma 'Show object', chequeo si el objeto está declarado
 checkCommand _ = return () -- Retorno () en otro caso
 
 -- Chequeo una sola sentencia
-checkSentence :: Sentence -> Gamma ()
-checkSentence (Command c) = checkCommand c -- Chequeo un comando
-checkSentence (IfCommand _ c) = checkCommand c -- Chequeo un comando dentro de un if
+checkSentence :: Sentence -> Type -> Gamma ()
+checkSentence (Command c) _= checkCommand c -- Chequeo un comando
+checkSentence (IfCommand Locked c) TTarget = checkCommand c -- Chequeo un comando dentro de un if
+checkSentence (IfCommand Unlocked c) TTarget = checkCommand c -- Chequeo un comando dentro de un if
+checkSentence (IfCommand Locked _) TItem = throwException "Object not target for this conditions"
+checkSentence (IfCommand Unlocked _) TItem = throwException "Object not target for this conditions"
+checkSentence (IfCommand _ c) _ = checkCommand c
 
 -- Chequeo todas las sentencias de una lista
-checkSentences :: Sentences -> Gamma ()
-checkSentences [] = return () -- Caso de lista vacía
-checkSentences (x:xs) = do checkSentence x -- Chequeo una sentencia
-                           checkSentences xs -- Chequeo el resto de las sentencias
+checkSentences :: Sentences -> Type -> Gamma ()
+checkSentences [] t = return () -- Caso de lista vacía
+checkSentences (x:xs) t = do checkSentence x t -- Chequeo una sentencia
+                             checkSentences xs t -- Chequeo el resto de las sentencias
 
 -- Recolecto la información de un sólo objeto item
 collectOneItem :: Declaration -> Gamma ItemDefData -- Recolecto la información de un sólo objeto item
 collectOneItem (Unlock _) = throwException "Unlock declaration not allowed here" -- No puede haber Unlock en un item 
 collectOneItem (Elements e) = do k <- collectElements e -- Recolecto los elementos
                                  return (emptyItemDefData { ielements = k }) -- Retorno el objeto vacío con los elementos sólamente
-collectOneItem (OnUse s) = do checkSentences s -- Chequeo las sentencias que se ejecutan al usar el objeto. Evito variables no declaradas
+collectOneItem (OnUse s) = do checkSentences s TItem -- Chequeo las sentencias que se ejecutan al usar el objeto. Evito variables no declaradas
                               return (emptyItemDefData { isentences = s }) -- Retorno el objeto vacío con las sentencias sólamente
 
 -- Recolecto los datos de los objetos item
@@ -74,7 +78,7 @@ collectOneTarget :: Declaration -> Gamma TargetDefData
 collectOneTarget (Unlock n) = return (emptyTargetDefData { code = n }) -- Recolecto el código de desbloqueo
 collectOneTarget (Elements e) = do k <- collectElements e -- Recolecto los elementos
                                    return (emptyTargetDefData { telements = k }) -- Retorno el objeto vacío con los elementos sólamente
-collectOneTarget (OnUse s) =  do checkSentences s -- Chequeo las sentencias que se ejecutan al usar el objeto. Evito variables no declaradas
+collectOneTarget (OnUse s) =  do checkSentences s TTarget -- Chequeo las sentencias que se ejecutan al usar el objeto. Evito variables no declaradas
                                  return (emptyTargetDefData { tsentences = s }) -- Retorno el objeto vacío con las sentencias sólamente
 
 -- Recolecto los datos de los objetos objetivo

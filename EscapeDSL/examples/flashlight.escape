@@ -1,0 +1,31 @@
+
+
+
+item InvisibleInkNote {
+    onuse {
+        if locked -> show "It looks like a blank piece of paper.",
+        if unlocked -> show "You revealed the secret!"
+    }
+}
+
+item Flashlight {
+    onuse {
+        if InvisibleInkNote is locked -> show "The light reveals hidden numbers: 9988"
+    }
+}
+
+target Desk {
+    elements {
+        InvisibleInkNote
+    }
+    onuse {
+        show "A wooden desk. There is a note on it."
+    }
+}
+
+game {
+    Desk,
+    Flashlight,
+    InvisibleInkNote
+}
+

@@ -73,6 +73,8 @@ class MonadGameState m where
 class MonadObjectMap m where
   -- Verifica que todos los elementos estén definidos en el entorno Gamma
   checkdefinition :: ObjectName -> m ()
+  -- Verifica que el item es un target
+  checkistarget :: ObjectName -> m ()
   -- Extrae el mapa de objetos de la mónada Gamma
   getobjects :: m Objects
   -- Inserta un item en el mapa de objetos de la mónada Gamma
@@ -171,6 +173,10 @@ instance MonadObjectMap Gamma where
       e = telements d
       s = tsentences d
       c = code d
+  checkistarget o = do (_, targetsmap) <- getobjects
+                       case Map.lookup o targetsmap of
+                                 Nothing -> throwException ("Object " ++ o ++ " not target for this conditions")
+                                 Just _ -> return ()
   unionelements e1 e2
     | e1 == Set.empty = return e2
     | e2 == Set.empty = return e1
