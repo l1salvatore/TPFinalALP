@@ -51,7 +51,7 @@ checkSentence (IfCommand _ c) _ = checkCommand c
 
 -- Chequeo todas las sentencias de una lista
 checkSentences :: Sentences -> Type -> Gamma ()
-checkSentences [] t = return () -- Caso de lista vacía
+checkSentences [] _ = return () -- Caso de lista vacía
 checkSentences (x:xs) t = do checkSentence x t -- Chequeo una sentencia
                              checkSentences xs t -- Chequeo el resto de las sentencias
 

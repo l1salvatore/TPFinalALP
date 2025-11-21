@@ -28,7 +28,7 @@ item horse {
 
 item picture {
     onuse {
-      show "The pictures show a Horse, a Dog, a Lion, and and Elephant on the jungle"
+      show "The picture shows a Horse, a Dog, a Lion, and and Elephant on the jungle"
     }
 }
 
