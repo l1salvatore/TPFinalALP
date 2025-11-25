@@ -1,7 +1,10 @@
 
 
 
-item InvisibleInkNote {
+target InvisibleInkNote {
+
+    unlock: 9988
+    
     onuse {
         if locked -> show "It looks like a blank piece of paper.",
         if unlocked -> show "You revealed the secret!"
@@ -14,7 +17,7 @@ item Flashlight {
     }
 }
 
-target Desk {
+item Desk {
     elements {
         InvisibleInkNote
     }

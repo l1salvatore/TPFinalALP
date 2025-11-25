@@ -51,9 +51,14 @@ checkSentence (IfCommand _ c) _ = checkCommand c
 
 -- Chequeo todas las sentencias de una lista
 checkSentences :: Sentences -> Type -> Gamma ()
-checkSentences [] _ = return () -- Caso de lista vacía
+checkSentences [] t = return () -- Caso de lista vacía
 checkSentences (x:xs) t = do checkSentence x t -- Chequeo una sentencia
                              checkSentences xs t -- Chequeo el resto de las sentencias
+
+checkUnlockStatement :: TargetDefData -> Gamma ()
+checkUnlockStatement t = if code t <= 0
+                         then throwException "Missing unlock code for target object"
+                         else return ()
 
 -- Recolecto la información de un sólo objeto item
 collectOneItem :: Declaration -> Gamma ItemDefData -- Recolecto la información de un sólo objeto item
@@ -101,6 +106,7 @@ collectOneObject (ObjectDef TItem name decls) = do itemdata <- collectItems decl
                                                    objects <- getobjects -- Consulto el mapa de objetos actual
                                                    putitem name itemdata objects -- Inserto el item al mapa de objetos
 collectOneObject (ObjectDef TTarget name decls) = do targetdata <- collectTargets decls -- Recolecto la información del target
+                                                     checkUnlockStatement targetdata -- Chequeo que el target tenga código de desbloqueo
                                                      objects <- getobjects -- Consulto el mapa de objetos actual
                                                      puttarget name targetdata objects -- Inserto el target al mapa de objetos
 

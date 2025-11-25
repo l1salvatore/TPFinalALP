@@ -100,7 +100,9 @@ instance MonadError Gamma where
 
 instance MonadGameIO Gamma where
   applyprettyprinter f x = Gamma (lift (Sigma (lift (lift (f x)))))
-  readusercmd = do applyprettyprinter putStr ">" 
+  readusercmd = do o <- objectNavigationTop
+                   applyprettyprinter putStr o
+                   applyprettyprinter putStr ">" 
                    Gamma (lift (Sigma (lift (lift (do hFlush stdout; getLine)))))
   showrootgame =  do (_, xs) <- Gamma (lift (Sigma get))
                      case xs of
