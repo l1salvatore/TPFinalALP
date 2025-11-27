@@ -10,11 +10,11 @@ import PrettyPrinter
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 
-executeCmd :: Command -> Gamma ()
+executeCmd :: Command -> GameState ()
 executeCmd (Show (ShowMessage msg)) = applyprettyprinter ppMessage msg
 executeCmd (Show (ShowObject obj)) = applyprettyprinter ppShowObject obj
 
-execute :: Sentences -> Gamma ()
+execute :: Sentences -> GameState ()
 execute [] = return ()
 execute ((Command c):xs) = do executeCmd c
                               execute xs
@@ -35,7 +35,7 @@ parseInput input = case words input of
 
 
 
-processUserInput :: String -> Gamma ()
+processUserInput :: String -> GameState ()
 processUserInput msg = case parseInput msg of
                Nothing -> applyprettyprinter ppMessage "Invalid command"
                Just cmd -> case cmd of
@@ -65,13 +65,13 @@ processUserInput msg = case parseInput msg of
                                                                   when (status == VLock) $ applyprettyprinter ppMessage "It seems this object has an unlock mechanism."
                                             sentences <- getusecommands current
                                             execute sentences
-runGame :: Gamma ()
+runGame :: GameState ()
 runGame = do applyprettyprinter ppMessage "Welcome to escape room"
              applyprettyprinter (const ppShowMenu) ()
              showrootgame
              runGame'
 
-runGame' :: Gamma ()
+runGame' :: GameState ()
 runGame' = do msg <- readusercmd
               case msg of
                  "quit" -> applyprettyprinter ppMessage "Exiting game. Goodbye!"

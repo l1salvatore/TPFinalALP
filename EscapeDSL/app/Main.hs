@@ -1,14 +1,14 @@
 import Parser.Lexer (alexScanTokens)
 import Parser.Parser (parseEscapeRoom)
 import Eval (collectObjects)
-import EvalModel
-import GameMonads (runGamma, runSigma, Gamma (runGamma), Sigma (Sigma))
+import EvalModel (initSigma, emptyGamma)
+import GameMonads (runGameState)
 import GameExec (runGame)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.State (runStateT)
 import System.Environment (getArgs)
 import qualified Data.Map as Map 
-import Stack (Stack(Stack))
+import Stack
 
 main :: IO ()
 main = do
@@ -25,11 +25,11 @@ main = do
             
             -- 'collectObjects ast' es de tipo Gamma ()
             -- Lo corremos con un estado Gamma (Objects) vacío
-            let (Sigma sigmaActionForEval) = runStateT (runGamma (collectObjects ast)) emptyObjects
+            let  sigmaActionForEval = runStateT (runGameState (collectObjects ast)) emptyGamma
 
             -- Para correr esta acción de Sigma, necesitamos un GameState "dummy".
             -- No importa, porque 'eval' (idealmente) no debería tocar el GameState.
-            let dummyGameState = (Map.empty, Stack ["game"]) 
+            let dummyGameState = (Map.empty, ["game"]) 
             
             -- Corremos la pila de 'eval'
             evalResult <- runExceptT (runStateT sigmaActionForEval dummyGameState)
@@ -50,12 +50,12 @@ main = do
                     
                     -- 2. ¡Llamamos a tu nueva función!
                     --    Creamos el GameState INICIAL REAL
-                    let realInitialGameState = initGameState targetsMap
+                    let realInitialGameState = initSigma targetsMap
                     
                     -- 3. Ahora corremos 'runGame'.
                     --    La acción 'runGame' vive en la mónada Gamma.
                     --    La corremos con los 'finalObjects' como su estado inicial.
-                    let (Sigma sigmaActionForGame) = runStateT (runGamma runGame) finalObjects
+                    let sigmaActionForGame = runStateT (runGameState runGame) finalObjects
                     
                     -- 4. Corremos la pila de 'runGame'
                     --    ¡Esta vez usamos el 'realInitialGameState'!

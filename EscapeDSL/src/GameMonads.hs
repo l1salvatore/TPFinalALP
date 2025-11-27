@@ -14,40 +14,17 @@ import GHC.IO.Handle
 import System.IO
 import PrettyPrinter
 
+-- La mónada GameState maneja el mapa de objetos (Gamma) y el estado de los objetos y navegación (Sigma)
+newtype GameState a = GameState { runGameState :: StateT Gamma (StateT Sigma (ExceptT String IO)) a }
 
--- La mónada Sigma maneja el estado del juego (GameState) y errores en IO 
-newtype Sigma a = Sigma { runSigma :: StateT GameState (ExceptT String IO) a }
-
--- ma es una monada, por lo cual podemos aplicar fmap f a ma
-instance Functor Sigma where
-  fmap f (Sigma ma) = Sigma (fmap f ma)
-
--- newtype Persona = P { edad :: Int, nombre:: String}
--- edad :: Persona -> Int
--- nombre :: Persona -> String
-
-instance Applicative Sigma where
-  pure = Sigma . pure
+instance Functor GameState where
+  fmap f (GameState ma) = GameState (fmap f ma)
+instance Applicative GameState where
+  pure = GameState . pure
   (<*>) = ap
-
-instance Monad Sigma where
+instance Monad GameState where
   return = pure
-  -- ma es una mónada, por lo cual el bind >>= corresponde a la mónada ma donde le pasamos la nueva función digamos g
-  -- que toma algo de tipo a y devuelve Sigma b
-  (Sigma ma) >>= f = Sigma (ma >>= \a -> runSigma (f a))
-
--- La mónada Gamma maneja el mapa de objetos (Objects) y usa Sigma para el estado del juego y errores
-newtype Gamma a = Gamma { runGamma :: StateT Objects Sigma a }
-
-instance Functor Gamma where
-  fmap f (Gamma ma) = Gamma (fmap f ma)
-instance Applicative Gamma where
-  pure = Gamma . pure
-  (<*>) = ap
-instance Monad Gamma where
-  return = pure
-  (Gamma ma) >>= f = Gamma (ma >>= \a -> runGamma (f a))
-
+  (GameState ma) >>= f = GameState (ma >>= \a -> runGameState (f a))
 -- La clase MonadError maneja errores en la mónada
 class MonadError m where
   throwException :: String -> m a
@@ -78,16 +55,16 @@ class MonadGameState m where
 
 -- Además, definimos la clase MonadObjectMap que maneja las operaciones necesarias para el mapa de objetos
 class MonadObjectMap m where
-  -- Verifica que todos los elementos estén definidos en el entorno Gamma
+  -- Verifica que todos los elementos estén definidos en el entorno GameGameState
   checkdefinition :: ObjectName -> m ()
   -- Verifica que el item es un target
   checkistarget :: ObjectName -> m ()
-  -- Extrae el mapa de objetos de la mónada Gamma
-  getobjects :: m Objects
-  -- Inserta un item en el mapa de objetos de la mónada Gamma
-  putitem :: ObjectName -> ItemDefData -> Objects -> m ()
-  -- Inserts a objetivo en el mapa de objetos de la mónada Gamma
-  puttarget :: ObjectName -> TargetDefData -> Objects -> m ()
+  -- Extrae el mapa de objetos de la mónada GameGameState
+  getobjects :: m Gamma
+  -- Inserta un item en el mapa de objetos de la mónada GameGameState
+  putitem :: ObjectName -> ItemDefData -> Gamma -> m ()
+  -- Inserts a objetivo en el mapa de objetos de la mónada GameGameState
+  puttarget :: ObjectName -> TargetDefData -> Gamma -> m ()
   -- Union de dos conjuntos de elementos, lanzando error si hay declaración duplicada
   unionelements :: Elements -> Elements -> m Elements
   -- Union de dos listas de sentencias, lanzando error si hay declaración duplicada
@@ -101,19 +78,19 @@ class MonadObjectMap m where
 
 
 
-instance MonadError Gamma where
-  throwException msg = Gamma (lift (Sigma (lift (throwError msg))))
+instance MonadError GameState where
+  throwException msg = GameState (lift (lift (throwError msg)))
 
 
-instance MonadGameIO Gamma where
-  applyprettyprinter f x = Gamma (lift (Sigma (lift (lift (f x)))))
+instance MonadGameIO GameState where
+  applyprettyprinter f x = GameState (lift (lift (lift (f x))))
   readusercmd = do o <- objectNavigationTop
                    applyprettyprinter putStr o
                    applyprettyprinter putStr ">" 
-                   Gamma (lift (Sigma (lift (lift (do hFlush stdout; getLine)))))
-  showrootgame =  do (_, xs) <- Gamma (lift (Sigma get))
+                   GameState (lift (lift (lift (do hFlush stdout; getLine))))
+  showrootgame =  do (_, xs) <- GameState (lift get)
                      case xs of
-                        ["game"] -> do  i <- Gamma get
+                        ["game"] -> do  i <- GameState get
                                         case Map.lookup "game" (fst i) of
                                              Nothing -> throwException "Game object not found"
                                              Just gamedata -> let mainobjects = ielements gamedata
@@ -125,59 +102,59 @@ instance MonadGameIO Gamma where
 
 
 
-instance MonadGameState Gamma where
+instance MonadGameState GameState where
   objectNavigationTop = do
-          (_, objectstack) <- Gamma (lift (Sigma get))
+          (_, objectstack) <- GameState (lift get)
           case peek objectstack of
             Nothing -> throwException "Object stack is empty"
             Just o -> return o
   objectNavigationPush o = do
-          (blockmap, objectstack) <- Gamma (lift (Sigma get))
+          (blockmap, objectstack) <- GameState (lift  get)
           let newstack = push o objectstack
-          Gamma (lift (Sigma (put (blockmap, newstack))))
+          GameState (lift  (put (blockmap, newstack)))
   objectNavigationPop = do
-          (blockmap, objectstack) <- Gamma (lift (Sigma get))
+          (blockmap, objectstack) <- GameState (lift  get)
           case objectstack of
             ["game"] -> do applyprettyprinter ppMessage "Reached the root"
                            showrootgame
             _              -> do let newstack = pop objectstack in
-                                   Gamma (lift (Sigma (put (blockmap, newstack))))
+                                   GameState (lift  (put (blockmap, newstack)))
                                  showrootgame
   getLockStatus o = do
-          (blockmap, _) <- Gamma (lift (Sigma get))
+          (blockmap, _) <- GameState (lift  get)
           case Map.lookup o blockmap of
             Nothing -> throwException ("Lock status for object " ++ o ++ " not found")
             Just status -> return status
   unlock o = do
-          (blockmap, objectstack) <- Gamma (lift (Sigma get))
+          (blockmap, objectstack) <- GameState (lift  get)
           let newblockmap = Map.insert o VUnlock blockmap
-          Gamma (lift (Sigma (put (newblockmap, objectstack))))
+          GameState (lift  (put (newblockmap, objectstack)))
   allunlocked = do
-          (blockmap, _) <- Gamma (lift (Sigma get))
+          (blockmap, _) <- GameState (lift  get)
           return (all (== VUnlock) (Map.elems blockmap))
 
 
 
 
-instance MonadObjectMap Gamma where
+instance MonadObjectMap GameState where
   checkdefinition element = do
-          (itemsmap, targetsmap) <- Gamma get
+          (itemsmap, targetsmap) <- GameState get
           if Map.member element itemsmap || Map.member element targetsmap
             then return ()
             else throwException ("Element " ++ element ++ " is not defined")
-  getobjects = Gamma get
+  getobjects = GameState get
   getelements obj = do
-          (itemsmap, targetsmap) <- Gamma get
+          (itemsmap, targetsmap) <- GameState get
           case Map.lookup obj itemsmap of
             Just itemdata -> return (ielements itemdata)
             Nothing -> case Map.lookup obj targetsmap of
                          Just targetdata -> return (telements targetdata)
                          Nothing -> throwException ("Object " ++ obj ++ " not found")
-  putitem o d g = Gamma (put (Data.Bifunctor.first (Map.insert o (ItemDefData e s)) g))
+  putitem o d g = GameState (put (Data.Bifunctor.first (Map.insert o (ItemDefData e s)) g))
     where
       e = ielements d
       s = isentences d
-  puttarget o d g = Gamma (put (Data.Bifunctor.second (Map.insert o (TargetDefData e s c)) g))
+  puttarget o d g = GameState (put (Data.Bifunctor.second (Map.insert o (TargetDefData e s c)) g))
     where
       e = telements d
       s = tsentences d
@@ -199,7 +176,7 @@ instance MonadObjectMap Gamma where
     | k2 == 0 = return k1
     | otherwise = throwException "Multiple Unlock declarations"
   getusecommands o = do
-          (itemsmap, targetsmap) <- Gamma get
+          (itemsmap, targetsmap) <- GameState get
           case Map.lookup o itemsmap of
             Just itemdata -> return (isentences itemdata)
             Nothing -> case Map.lookup o targetsmap of

@@ -8,7 +8,7 @@ import GameMonads
 
 
 -- Evaluador de condiciones
-evalCond :: Conditions -> Gamma Bool
+evalCond :: Conditions -> GameState Bool
 evalCond Locked = do current <- objectNavigationTop -- Obtengo el primer elemento de la pila (el actual de la navegación)
                      status <- getLockStatus current -- Chequeo si está bloqueado o desbloqueado
                      return (status == VLock) -- Retorno true si está locked, o false si está unlocked
@@ -29,19 +29,19 @@ evalCond (Or c1 c2) = do v1 <- evalCond c1 -- Evaluo recursivamente c1
                          return (v1 || v2) -- Retorno la conjunción de ambos v1 y v2
 
 -- Recolecto los elementos (objetos) de un objeto
-collectElements :: [ObjectName] -> Gamma Elements
+collectElements :: [ObjectName] -> GameState Elements
 collectElements [] = return Set.empty -- Retorno el conjunto vacío
 collectElements (o:os) = do es <- collectElements os -- Recolecto la lista restante
                             checkdefinition o -- Chequeo la definición de o, si está declarado
                             return (Set.insert o es) -- Inserto o a la lista restante
 
 -- Chequeo un sólo comando
-checkCommand :: Command -> Gamma ()
+checkCommand :: Command -> GameState ()
 checkCommand (Show (ShowObject obj)) = checkdefinition obj -- Para las sentencias de la forma 'Show object', chequeo si el objeto está declarado
 checkCommand _ = return () -- Retorno () en otro caso
 
 -- Chequeo una sola sentencia
-checkSentence :: Sentence -> Type -> Gamma ()
+checkSentence :: Sentence -> Type -> GameState ()
 checkSentence (Command c) _= checkCommand c -- Chequeo un comando
 checkSentence (IfCommand Locked c) TTarget = checkCommand c -- Chequeo un comando dentro de un if
 checkSentence (IfCommand Unlocked c) TTarget = checkCommand c -- Chequeo un comando dentro de un if
@@ -50,18 +50,18 @@ checkSentence (IfCommand Unlocked _) TItem = throwException "Object not target f
 checkSentence (IfCommand _ c) _ = checkCommand c
 
 -- Chequeo todas las sentencias de una lista
-checkSentences :: Sentences -> Type -> Gamma ()
+checkSentences :: Sentences -> Type -> GameState ()
 checkSentences [] t = return () -- Caso de lista vacía
 checkSentences (x:xs) t = do checkSentence x t -- Chequeo una sentencia
                              checkSentences xs t -- Chequeo el resto de las sentencias
 
-checkUnlockStatement :: TargetDefData -> Gamma ()
+checkUnlockStatement :: TargetDefData -> GameState ()
 checkUnlockStatement t = if code t <= 0
                          then throwException "Missing unlock code for target object"
                          else return ()
 
 -- Recolecto la información de un sólo objeto item
-collectOneItem :: Declaration -> Gamma ItemDefData -- Recolecto la información de un sólo objeto item
+collectOneItem :: Declaration -> GameState ItemDefData -- Recolecto la información de un sólo objeto item
 collectOneItem (Unlock _) = throwException "Unlock declaration not allowed here" -- No puede haber Unlock en un item 
 collectOneItem (Elements e) = do k <- collectElements e -- Recolecto los elementos
                                  return (emptyItemDefData { ielements = k }) -- Retorno el objeto vacío con los elementos sólamente
@@ -69,7 +69,7 @@ collectOneItem (OnUse s) = do checkSentences s TItem -- Chequeo las sentencias q
                               return (emptyItemDefData { isentences = s }) -- Retorno el objeto vacío con las sentencias sólamente
 
 -- Recolecto los datos de los objetos item
-collectItems :: [Declaration] -> Gamma ItemDefData
+collectItems :: [Declaration] -> GameState ItemDefData
 collectItems [] = return emptyItemDefData -- Caso de lista vacía
 collectItems (x:xs) = do itemdata <- collectOneItem x -- Recolecto los datos de un objeto item
                          restdata <- collectItems xs -- Recolecto el resto de los datos
@@ -79,7 +79,7 @@ collectItems (x:xs) = do itemdata <- collectOneItem x -- Recolecto los datos de 
 
 
 -- Recolecto la información de un sólo objeto objetivo
-collectOneTarget :: Declaration -> Gamma TargetDefData
+collectOneTarget :: Declaration -> GameState TargetDefData
 collectOneTarget (Unlock n) = return (emptyTargetDefData { code = n }) -- Recolecto el código de desbloqueo
 collectOneTarget (Elements e) = do k <- collectElements e -- Recolecto los elementos
                                    return (emptyTargetDefData { telements = k }) -- Retorno el objeto vacío con los elementos sólamente
@@ -87,7 +87,7 @@ collectOneTarget (OnUse s) =  do checkSentences s TTarget -- Chequeo las sentenc
                                  return (emptyTargetDefData { tsentences = s }) -- Retorno el objeto vacío con las sentencias sólamente
 
 -- Recolecto los datos de los objetos objetivo
-collectTargets :: [Declaration] -> Gamma TargetDefData
+collectTargets :: [Declaration] -> GameState TargetDefData
 collectTargets [] = return emptyTargetDefData -- Caso de lista vacía
 collectTargets (x:xs) = do targetdata <- collectOneTarget x -- Recolecto los datos de un objeto objetivo
                            restdata <- collectTargets xs -- Recolecto el resto de los datos
@@ -98,7 +98,7 @@ collectTargets (x:xs) = do targetdata <- collectOneTarget x -- Recolecto los dat
 
 
 -- Recolecto la información de un sólo objeto
-collectOneObject :: Definition -> Gamma ()
+collectOneObject :: Definition -> GameState ()
 collectOneObject (Game objs) = do itemdata <- collectItems [Elements objs] -- El juego raiz es un item con los elementos principales
                                   objects <- getobjects -- Consulto el mapa de objetos actual
                                   putitem "game" itemdata objects -- Inserto el juego raiz al mapa de objetos
@@ -112,7 +112,7 @@ collectOneObject (ObjectDef TTarget name decls) = do targetdata <- collectTarget
 
 
 -- Recolecto todos los objetos del GameDefinition
-collectObjects :: GameDefinition -> Gamma Objects
-collectObjects [] = return emptyObjects -- Caso de lista vacía
+collectObjects :: GameDefinition -> GameState Gamma
+collectObjects [] = return emptyGamma -- Caso de lista vacía
 collectObjects (x:xs) = do collectOneObject x -- Recolecto un objeto, x y lo inserto en el mapa
                            collectObjects xs -- Recolecto el resto de los objetos

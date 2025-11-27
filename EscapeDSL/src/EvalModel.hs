@@ -35,11 +35,11 @@ emptyTargetDefData = TargetDefData Set.empty [] 0
 type Elements = Set.Set ObjectName
 
 -- El mapa de objetos: un par de mapas, uno para ítems y otro para objetivos
-type Objects = (ItemsMap, TargetsMap)
+type Gamma = (ItemsMap, TargetsMap)
 
 -- El mapa de objetos vacío, el estado inicial
-emptyObjects :: Objects
-emptyObjects = (Map.empty, Map.empty)
+emptyGamma :: Gamma
+emptyGamma = (Map.empty, Map.empty)
 
 -- El tipo de dato de bloqueo de un objeto: puede ser locked o unlocked
 data BlockData = VLock | VUnlock deriving (Show, Eq)
@@ -50,11 +50,11 @@ type BlockMap = Map.Map ObjectName BlockData
 -- La pila de navegación de objetos
 type ObjectStack = [ObjectName]
 
--- El estado de la evaluación: contiene el entorno Gamma, el mapa de bloqueos y la pila de navegación
-type GameState = (BlockMap, ObjectStack)
+-- El estado de la evaluación: contiene el mapa de bloqueos y la pila de navegación
+type Sigma = (BlockMap, ObjectStack)
 
-initGameState :: TargetsMap -> GameState
-initGameState targets = (initialBlockMap, initialStack)
+initSigma :: TargetsMap -> Sigma
+initSigma targets = (initialBlockMap, initialStack)
   where
     -- 1. Creamos el BlockMap:
     -- Map.map toma el TargetsMap, ignora los valores (TargetDefData),
