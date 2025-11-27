@@ -48,7 +48,7 @@ data BlockData = VLock | VUnlock deriving (Show, Eq)
 type BlockMap = Map.Map ObjectName BlockData
 
 -- La pila de navegación de objetos
-type ObjectStack = Stack ObjectName
+type ObjectStack = [ObjectName]
 
 -- El estado de la evaluación: contiene el entorno Gamma, el mapa de bloqueos y la pila de navegación
 type GameState = (BlockMap, ObjectStack)
@@ -63,7 +63,7 @@ initGameState targets = (initialBlockMap, initialStack)
     initialBlockMap = Map.map (const VLock) targets
 
     -- 2. Creamos la pila de navegación inicial
-    initialStack = Stack ["game"]
+    initialStack = ["game"]
 
 -- El comando de entrada del usuario
 data InputCommand = InputSelect ObjectName
