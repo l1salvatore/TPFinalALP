@@ -112,7 +112,7 @@ collectOneObject (ObjectDef TTarget name decls) = do targetdata <- collectTarget
 
 
 -- Recolecto todos los objetos del GameDefinition
-collectObjects :: GameDefinition -> GameState Gamma
+collectObjects :: GameDefinition -> ObjectsMap -> ObjectsMap
 collectObjects [] = return emptyGamma -- Caso de lista vacía
 collectObjects (x:xs) = do collectOneObject x -- Recolecto un objeto, x y lo inserto en el mapa
                            collectObjects xs -- Recolecto el resto de los objetos

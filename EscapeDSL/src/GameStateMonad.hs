@@ -15,16 +15,17 @@ import System.IO
 import PrettyPrinter
 
 -- La mónada GameState maneja el mapa de objetos (Gamma) y el estado de los objetos y navegación (Sigma)
-newtype GameState a = GameState { runGameState :: StateT Gamma (StateT Sigma (ExceptT String IO)) a }
+newtype GameState a = GameState { runGameState :: StateT Sigma (ExceptT String IO) a }
 
 instance Functor GameState where
-  fmap f (GameState ma) = GameState (fmap f ma)
+  fmap f (GameState s) = GameState (fmap f s)
 instance Applicative GameState where
   pure = GameState . pure
   (<*>) = ap
 instance Monad GameState where
   return = pure
-  (GameState ma) >>= f = GameState (ma >>= \a -> runGameState (f a))
+  (GameState s) >>= f = GameState (s >>= \a -> runGameState (f a))
+  
 -- La clase MonadError maneja errores en la mónada
 class MonadError m where
   throwException :: String -> m a
@@ -52,29 +53,6 @@ class MonadGameState m where
   unlock :: ObjectName -> m ()
   -- Verifica si todos los objetos están desbloqueados
   allunlocked :: m Bool
-
--- Además, definimos la clase MonadObjectMap que maneja las operaciones necesarias para el mapa de objetos
-class MonadObjectMap m where
-  -- Verifica que todos los elementos estén definidos en el entorno GameGameState
-  checkdefinition :: ObjectName -> m ()
-  -- Verifica que el item es un target
-  checkistarget :: ObjectName -> m ()
-  -- Extrae el mapa de objetos de la mónada GameGameState
-  getobjects :: m Gamma
-  -- Inserta un item en el mapa de objetos de la mónada GameGameState
-  putitem :: ObjectName -> ItemDefData -> Gamma -> m ()
-  -- Inserts a objetivo en el mapa de objetos de la mónada GameGameState
-  puttarget :: ObjectName -> TargetDefData -> Gamma -> m ()
-  -- Union de dos conjuntos de elementos, lanzando error si hay declaración duplicada
-  unionelements :: Elements -> Elements -> m Elements
-  -- Union de dos listas de sentencias, lanzando error si hay declaración duplicada
-  unionsentences :: Sentences -> Sentences -> m Sentences
-  -- Máximo de dos códigos de desbloqueo, lanzando error si hay declaración duplicada
-  maxunlockcodes :: UnlockCode -> UnlockCode -> m UnlockCode
-  -- Obtiene los elementos de un objeto
-  getelements :: ObjectName -> m Elements
-  -- Obtiene las sentencias de uso de un objeto
-  getusecommands :: ObjectName -> m Sentences
 
 
 
