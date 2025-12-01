@@ -1,21 +1,34 @@
 {-# LANGUAGE GADTs #-}
-module GameMonads where
+{-# LANGUAGE InstanceSigs #-}
+module GameStateMonad where
 
+
+import Control.Monad.State
+import Control.Monad (ap)
+
+import GameModel
+import Control.Monad.Except (ExceptT)
 import AST
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import Control.Monad.State
-import Control.Monad (ap)
-import qualified Data.Bifunctor
+import Control.Monad.Error.Class
 import Stack
-import EvalModel
-import Control.Monad.Except (ExceptT, throwError)
 import GHC.IO.Handle
-import System.IO
+import GHC.IO.Handle.FD
 import PrettyPrinter
 
+
+-- 1. El Entorno de Lectura (Read-Only)
+-- Contiene los "planos" del juego que no cambian.
+data GameEnv = GameEnv {
+    envGamma :: Gamma,          -- Tipos
+    envObjects :: ObjectsMap    -- Definiciones (Elements, OnUse, Code)
+}
+
+
+
 -- La mónada GameState maneja el mapa de objetos (Gamma) y el estado de los objetos y navegación (Sigma)
-newtype GameState a = GameState { runGameState :: StateT Sigma (ExceptT String IO) a }
+newtype GameState a = GameState { runGameState :: StateT (GameEnv,Sigma) (ExceptT String IO) a }
 
 instance Functor GameState where
   fmap f (GameState s) = GameState (fmap f s)
@@ -25,10 +38,12 @@ instance Applicative GameState where
 instance Monad GameState where
   return = pure
   (GameState s) >>= f = GameState (s >>= \a -> runGameState (f a))
-  
--- La clase MonadError maneja errores en la mónada
-class MonadError m where
-  throwException :: String -> m a
+
+class Monad m => GameStateError m where
+  throwException :: String -> m ()
+
+instance GameStateError GameState where
+  throwException err = GameState (lift (throwError err))
 
 -- La clase MonadGameIO maneja las operaciones de entrada/salida del juego
 class MonadGameIO m where
@@ -39,124 +54,161 @@ class MonadGameIO m where
   -- Muestra el juego raiz
   showrootgame :: m ()
 
--- Definimos la clase MonadGameState que maneja las operaciones necesarias para el estado del juego
-class MonadGameState m where
-  -- Obtiene el objeto en la cima de la pila de navegación
-  objectNavigationTop :: m ObjectName
-  -- Empuja un objeto a la pila de navegación
-  objectNavigationPush :: ObjectName -> m ()
-  -- Saca el objeto en la cima de la pila de navegación
-  objectNavigationPop :: m ()
-  -- Obtiene el estado de bloqueo de un objeto
-  getLockStatus :: ObjectName -> m BlockData
-  -- Desbloquea un objeto
-  unlock :: ObjectName -> m ()
-  -- Verifica si todos los objetos están desbloqueados
-  allunlocked :: m Bool
-
-
-
-instance MonadError GameState where
-  throwException msg = GameState (lift (lift (throwError msg)))
-
-
 instance MonadGameIO GameState where
-  applyprettyprinter f x = GameState (lift (lift (lift (f x))))
+  applyprettyprinter f x = GameState (lift (lift (f x)))
   readusercmd = do o <- objectNavigationTop
                    applyprettyprinter putStr o
-                   applyprettyprinter putStr ">" 
-                   GameState (lift (lift (lift (do hFlush stdout; getLine))))
-  showrootgame =  do (_, xs) <- GameState (lift get)
+                   applyprettyprinter putStr ">"
+                   GameState (lift (lift (do hFlush stdout; getLine)))
+  showrootgame =  do (GameEnv _ objectmap, (_, xs)) <- GameState get
                      case xs of
-                        ["game"] -> do  i <- GameState get
-                                        case Map.lookup "game" (fst i) of
+                        ["game"] -> case Map.lookup "game" objectmap of
                                              Nothing -> throwException "Game object not found"
-                                             Just gamedata -> let mainobjects = ielements gamedata
-                                                              in applyprettyprinter ppElements mainobjects 
-                                        return ()
+                                             Just gamedata -> let mainobjects = elements gamedata
+                                                              in applyprettyprinter ppElements mainobjects
                         (x:_)    -> applyprettyprinter ppCurrentObject x
                         _              -> throwException "Object stack is empty"
 
 
 
+class Monad m => GameStateObjectsMonad m where
+   insertnamewithtype :: ObjectName -> Type -> m ()
+   insertobjectdata :: ObjectName -> ObjectData -> m ()
+   checkistargetException :: ObjectName -> m ()
+   checkistargetBool :: ObjectName -> m Bool
+   checkisaelementofException :: ObjectName -> ObjectName -> m ()
+   checkingammaException :: ObjectName -> m ()
+   getelements :: ObjectName -> m Elements
+   getobjectdata :: ObjectName -> m ObjectData
+   getusecommands :: ObjectName -> m Sentences
 
-instance MonadGameState GameState where
-  objectNavigationTop = do
-          (_, objectstack) <- GameState (lift get)
+
+
+instance GameStateObjectsMonad GameState where
+  insertnamewithtype o t = do
+                              (GameEnv gamma objectmap, (blockmap, objectstack)) <- GameState get
+                              if t == TTarget then
+                               GameState (put (GameEnv (Map.insert o t gamma) objectmap, (Map.insert o VLock blockmap, objectstack)))
+                              else
+                               GameState (put (GameEnv (Map.insert o t gamma) objectmap, (blockmap, objectstack)))
+  insertobjectdata :: ObjectName -> ObjectData -> GameState ()
+  insertobjectdata name odata = do
+                              (GameEnv gamma objectmap, sigma) <- GameState get
+                              GameState (put (GameEnv gamma (Map.insert name odata objectmap), sigma))
+  checkistargetBool objname = do
+                            (GameEnv gamma _, _) <- GameState get
+                            case Map.lookup objname gamma of
+                              Nothing -> error (objname ++ " object not found")
+                              Just ttype -> if ttype == TTarget then return True else return False
+  checkistargetException objname = do
+                            (GameEnv gamma _, _) <- GameState get
+                            case Map.lookup objname gamma of
+                              Nothing -> throwException (objname ++ " object not found")
+                              Just ttype -> if ttype == TTarget then return () else throwException (objname ++ " is not a target")
+  checkisaelementofException elementname objectname = do
+                                        (GameEnv _ objectmap, _) <- GameState get
+                                        case Map.lookup objectname objectmap of
+                                          Nothing -> throwException (objectname ++ " object not found")
+                                          Just odata -> if Set.member elementname (elements odata) then return ()
+                                                        else throwException (elementname ++ " is not an element of "++ objectname)
+  checkingammaException objectname = do
+                          (GameEnv gamma _, _) <- GameState get
+                          case Map.lookup objectname gamma of
+                            Nothing -> throwException (objectname ++ " object not found")
+                            Just _ -> return ()
+  getelements obj = do
+          (GameEnv _ objectmap, _) <- GameState get
+          case Map.lookup obj objectmap of
+            Just itemdata -> return (elements itemdata)
+            Nothing -> error ("Object " ++ obj ++ " not found")
+  getobjectdata obj = do
+          (GameEnv _ objectmap, _) <- GameState get
+          case Map.lookup obj objectmap of
+            Just itemdata -> return itemdata
+            Nothing -> error ("Object " ++ obj ++ " not found")
+  getusecommands obj = do
+          (GameEnv _ objectmap, _) <- GameState get
+          case Map.lookup obj objectmap of
+            Just itemdata -> return (sentences itemdata)
+            Nothing -> error ("Object " ++ obj ++ " not found")
+class Monad m => GameStateNavigationStackMonad m where
+ -- Obtiene el objeto en la cima de la pila de navegación
+   objectNavigationTop :: m ObjectName
+  -- Empuja un objeto a la pila de navegación
+   objectNavigationPush :: ObjectName -> m ()
+  -- Saca el objeto en la cima de la pila de navegación
+   objectNavigationPop :: m ()
+  -- Obtiene el estado de bloqueo de un objeto
+   getLockStatus :: ObjectName -> m BlockData
+  -- Desbloquea un objeto
+   unlock :: ObjectName -> m ()
+  -- Verifica si todos los objetos están desbloqueados
+   allunlocked :: m Bool
+
+instance GameStateNavigationStackMonad GameState where
+   objectNavigationTop = do
+          (_, (_, objectstack)) <- GameState get
           case peek objectstack of
-            Nothing -> throwException "Object stack is empty"
+            Nothing -> error "Object stack is empty"
             Just o -> return o
-  objectNavigationPush o = do
-          (blockmap, objectstack) <- GameState (lift  get)
+   objectNavigationPush o = do
+          (env, (objectlockstate, objectstack)) <- GameState   get
           let newstack = push o objectstack
-          GameState (lift  (put (blockmap, newstack)))
-  objectNavigationPop = do
-          (blockmap, objectstack) <- GameState (lift  get)
+          GameState (put (env, (objectlockstate, newstack)))
+   objectNavigationPop = do
+          (env, (objectlockstate, objectstack)) <- GameState   get
           case objectstack of
             ["game"] -> do applyprettyprinter ppMessage "Reached the root"
                            showrootgame
             _              -> do let newstack = pop objectstack in
-                                   GameState (lift  (put (blockmap, newstack)))
+                                   GameState (put (env, (objectlockstate, newstack)))
                                  showrootgame
-  getLockStatus o = do
-          (blockmap, _) <- GameState (lift  get)
-          case Map.lookup o blockmap of
-            Nothing -> throwException ("Lock status for object " ++ o ++ " not found")
+   getLockStatus :: ObjectName -> GameState BlockData
+   getLockStatus o = do
+          (_, (objectlockstate, _)) <- GameState   get
+          case Map.lookup o objectlockstate of
+            Nothing -> error ("Lock status for object " ++ o ++ " not found")
             Just status -> return status
-  unlock o = do
-          (blockmap, objectstack) <- GameState (lift  get)
-          let newblockmap = Map.insert o VUnlock blockmap
-          GameState (lift  (put (newblockmap, objectstack)))
-  allunlocked = do
-          (blockmap, _) <- GameState (lift  get)
-          return (all (== VUnlock) (Map.elems blockmap))
+   unlock o = do
+          (env, (objectlockstate, objectstack)) <- GameState  get
+          let newobjectlockstate = Map.insert o VUnlock objectlockstate
+          GameState (put (env, (newobjectlockstate, objectstack)))
+   allunlocked :: GameState Bool
+   allunlocked = do
+          (_, (objectlockstate, _)) <- GameState   get
+          return (all (== VUnlock) (Map.elems objectlockstate))
 
 
 
 
-instance MonadObjectMap GameState where
-  checkdefinition element = do
-          (itemsmap, targetsmap) <- GameState get
-          if Map.member element itemsmap || Map.member element targetsmap
-            then return ()
-            else throwException ("Element " ++ element ++ " is not defined")
-  getobjects = GameState get
-  getelements obj = do
-          (itemsmap, targetsmap) <- GameState get
-          case Map.lookup obj itemsmap of
-            Just itemdata -> return (ielements itemdata)
-            Nothing -> case Map.lookup obj targetsmap of
-                         Just targetdata -> return (telements targetdata)
-                         Nothing -> throwException ("Object " ++ obj ++ " not found")
-  putitem o d g = GameState (put (Data.Bifunctor.first (Map.insert o (ItemDefData e s)) g))
-    where
-      e = ielements d
-      s = isentences d
-  puttarget o d g = GameState (put (Data.Bifunctor.second (Map.insert o (TargetDefData e s c)) g))
-    where
-      e = telements d
-      s = tsentences d
-      c = code d
-  checkistarget o = do (_, targetsmap) <- getobjects
-                       case Map.lookup o targetsmap of
-                                 Nothing -> throwException ("Object " ++ o ++ " not target for this conditions")
-                                 Just _ -> return ()
-  unionelements e1 e2
-    | e1 == Set.empty = return e2
-    | e2 == Set.empty = return e1
-    | otherwise = throwException "Duplicate elements declaration"
-  unionsentences s1 s2
-    | null s1 = return s2
-    | null s2 = return s1
-    | otherwise = throwException "Duplicate onuse declaration"
-  maxunlockcodes k1 k2
-    | k1 == 0 = return k2
-    | k2 == 0 = return k1
-    | otherwise = throwException "Multiple Unlock declarations"
-  getusecommands o = do
-          (itemsmap, targetsmap) <- GameState get
-          case Map.lookup o itemsmap of
-            Just itemdata -> return (isentences itemdata)
-            Nothing -> case Map.lookup o targetsmap of
-                         Just targetdata -> return (tsentences targetdata)
-                         Nothing -> throwException ("Object " ++ o ++ " not found")
+buildObjectData :: [Declaration] -> (Int, Int, Int) -> GameState ObjectData
+buildObjectData [] _ = return emptyObjectData
+buildObjectData ((Unlock ncode) : xs) (e,s,n) = if n > 0 then error "Multiple declarations of unlock"
+                                                else
+                                                do
+                                                  odata <- buildObjectData xs (e, s, n+1)
+                                                  return (odata { code = Just ncode })
+buildObjectData ((Elements objList) : xs) (e,s,n)  = if e > 0 then error "Multiple declarations of elements"
+                                                     else
+                                                     do
+                                                      odata <- buildObjectData xs (e+1,s,n)
+                                                      return (odata { elements = Set.fromList objList})
+buildObjectData ((OnUse onUseCode) : xs) (e,s,n) = if s > 0 then error "Multiple declarations of onUSe"
+                                                   else
+                                                   do
+                                                      odata <- buildObjectData xs (e,s+1,n)
+                                                      return (odata { sentences = onUseCode })
+
+buildEnvironment :: GameDefinition -> GameState ()
+buildEnvironment [] = return ()
+buildEnvironment ((Game objList) :xs) = do
+                                            buildEnvironment (ObjectDef TItem "game" [Elements objList]: xs)
+buildEnvironment ((ObjectDef typ name decls):xs) = do
+                                                      odata <- buildObjectData decls (0,0,0)
+                                                      insertnamewithtype name typ
+                                                      insertobjectdata name odata
+                                                      buildEnvironment xs
+
+
+
+

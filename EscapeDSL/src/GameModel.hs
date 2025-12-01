@@ -11,10 +11,13 @@ import Stack
 -- Objetos O
 type ObjectsMap = Map.Map ObjectName ObjectData
 data ObjectData = ObjectData
-  { telements :: Set.Set ObjectName,
-    tsentences :: [Sentence],
+  { elements :: Set.Set ObjectName,
+    sentences :: [Sentence],
     code :: Maybe UnlockCode
   } deriving (Show, Eq)
+
+emptyObjectsMap :: ObjectsMap
+emptyObjectsMap = Map.empty
 
 emptyObjectData :: ObjectData
 emptyObjectData = ObjectData Set.empty [] Nothing
@@ -36,17 +39,6 @@ type ObjectStack = [ObjectName]
 -- El estado de la evaluación: contiene el mapa de bloqueos y la pila de navegación
 type Sigma = (BlockMap, ObjectStack)
 
--- initSigma :: TargetsMap -> Sigma
--- initSigma targets = (initialBlockMap, initialStack)
---   where
---     -- 1. Creamos el BlockMap:
---     -- Map.map toma el TargetsMap, ignora los valores (TargetDefData),
---     -- y crea un nuevo mapa con las MISMAS keys, pero
---     -- con el valor VLock para cada una.
---     initialBlockMap = Map.map (const VLock) targets
-
---     -- 2. Creamos la pila de navegación inicial
---     initialStack = ["game"]
 
 -- El comando de entrada del usuario
 data InputCommand = InputSelect ObjectName
