@@ -60,7 +60,8 @@ instance MonadGameIO GameState where
                    applyprettyprinter putStr o
                    applyprettyprinter putStr ">"
                    GameState (lift (lift (do hFlush stdout; getLine)))
-  showrootgame =  do (GameEnv _ objectmap, (_, xs)) <- GameState get
+  showrootgame =  do objectmap <- getObjectMap 
+                     xs <- getNavigationStack
                      case xs of
                         ["game"] -> case Map.lookup "game" objectmap of
                                              Nothing -> throwException "Game object not found"
@@ -72,6 +73,14 @@ instance MonadGameIO GameState where
 
 
 class Monad m => GameStateObjectsMonad m where
+   getGamma :: m Gamma
+   putGamma :: Gamma -> m ()
+   getObjectMap :: m ObjectsMap
+   putObjectMap :: ObjectsMap -> m ()
+   getBlockMap :: m BlockMap
+   putBlockMap :: BlockMap -> m ()
+   getNavigationStack :: m ObjectStack
+   putNavigationStack :: ObjectStack -> m ()
    insertnamewithtype :: ObjectName -> Type -> m ()
    insertobjectdata :: ObjectName -> ObjectData -> m ()
    getelements :: ObjectName -> m Elements
@@ -80,31 +89,59 @@ class Monad m => GameStateObjectsMonad m where
 
 
 
+
 instance GameStateObjectsMonad GameState where
+  getGamma = do 
+                (GameEnv gamma _, (_, _)) <- GameState get
+                return gamma
+  putGamma g = do 
+                  (GameEnv _ objectmap, (blockmap, objectstack)) <- GameState get
+                  GameState (put (GameEnv g objectmap, (blockmap, objectstack)))
+  getBlockMap = do 
+                  (GameEnv _ _ , (blockmap, _)) <- GameState get
+                  return blockmap
+  putBlockMap g = do
+                     (GameEnv gamma objectmap, (_, objectstack)) <- GameState get
+                     GameState (put (GameEnv gamma objectmap, (g, objectstack)))
+  getObjectMap = do 
+                    (GameEnv _ objectmap, (_, _)) <- GameState get
+                    return objectmap
+  putObjectMap g = do 
+                     (GameEnv gamma _, (blockmap, objectstack)) <- GameState get
+                     GameState (put (GameEnv gamma g, (blockmap, objectstack)))
+  getNavigationStack = do 
+                      (GameEnv _ _, (_, objectstack)) <- GameState get
+                      return objectstack
+  putNavigationStack g = do 
+                      (GameEnv gamma objectmap, (blockmap, _)) <- GameState get
+                      GameState (put (GameEnv gamma objectmap, (blockmap, g)))
   insertnamewithtype o t = do
-                              (GameEnv gamma objectmap, (blockmap, objectstack)) <- GameState get
+                              gamma <- getGamma 
                               if t == TTarget then
-                               GameState (put (GameEnv (Map.insert o t gamma) objectmap, (Map.insert o VLock blockmap, objectstack)))
+                               do blockmap <- getBlockMap 
+                                  putGamma (Map.insert o t gamma)
+                                  putBlockMap (Map.insert o VLock blockmap)
                               else
-                               GameState (put (GameEnv (Map.insert o t gamma) objectmap, (blockmap, objectstack)))
+                                  putGamma (Map.insert o t gamma)
   insertobjectdata name odata = do
-                              (GameEnv gamma objectmap, sigma) <- GameState get
-                              GameState (put (GameEnv gamma (Map.insert name odata objectmap), sigma))
+                              objectmap <- getObjectMap
+                              putObjectMap (Map.insert name odata objectmap)
   getelements obj = do
-          (GameEnv _ objectmap, _) <- GameState get
+          objectmap <- getObjectMap
           case Map.lookup obj objectmap of
             Just itemdata -> return (elements itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
   getobjectdata obj = do
-          (GameEnv _ objectmap, _) <- GameState get
+          objectmap <- getObjectMap 
           case Map.lookup obj objectmap of
             Just itemdata -> return itemdata
             Nothing -> error ("Object " ++ obj ++ " not found")
   getusecommands obj = do
-          (GameEnv _ objectmap, _) <- GameState get
+          objectmap <- getObjectMap 
           case Map.lookup obj objectmap of
             Just itemdata -> return (sentences itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
+
 class Monad m => GameStateNavigationStackMonad m where
  -- Obtiene el objeto en la cima de la pila de navegación
    objectNavigationTop :: m ObjectName
@@ -121,35 +158,35 @@ class Monad m => GameStateNavigationStackMonad m where
 
 instance GameStateNavigationStackMonad GameState where
    objectNavigationTop = do
-          (_, (_, objectstack)) <- GameState get
+          objectstack <- getNavigationStack
           case peek objectstack of
             Nothing -> error "Object stack is empty"
             Just o -> return o
    objectNavigationPush o = do
-          (env, (objectlockstate, objectstack)) <- GameState   get
+          objectstack <- getNavigationStack
           let newstack = push o objectstack
-          GameState (put (env, (objectlockstate, newstack)))
+          putNavigationStack newstack
    objectNavigationPop = do
-          (env, (objectlockstate, objectstack)) <- GameState   get
+          objectstack <- getNavigationStack
           case objectstack of
             ["game"] -> do applyprettyprinter ppMessage "Reached the root"
                            showrootgame
             _              -> do let newstack = pop objectstack in
-                                   GameState (put (env, (objectlockstate, newstack)))
+                                   putNavigationStack newstack
                                  showrootgame
    getLockStatus :: ObjectName -> GameState BlockData
    getLockStatus o = do
-          (_, (objectlockstate, _)) <- GameState   get
+          objectlockstate <- getBlockMap
           case Map.lookup o objectlockstate of
             Nothing -> error ("Lock status for object " ++ o ++ " not found")
             Just status -> return status
    unlock o = do
-          (env, (objectlockstate, objectstack)) <- GameState  get
+          objectlockstate <- getBlockMap
           let newobjectlockstate = Map.insert o VUnlock objectlockstate
-          GameState (put (env, (newobjectlockstate, objectstack)))
+          putBlockMap newobjectlockstate
    allunlocked :: GameState Bool
    allunlocked = do
-          (_, (objectlockstate, _)) <- GameState   get
+          objectlockstate <- getBlockMap
           return (all (== VUnlock) (Map.elems objectlockstate))
 
 
