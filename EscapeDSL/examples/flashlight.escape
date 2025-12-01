@@ -12,6 +12,9 @@ target InvisibleInkNote {
 }
 
 item Flashlight {
+    elements {
+        InvisibleInkNote
+    }
     onuse {
         if InvisibleInkNote is locked -> show "The light reveals hidden numbers: 9988"
     }

@@ -3,6 +3,40 @@ module ExpressionValidator where
 
 import AST
 import GameStateMonad
+import GameModel
+import qualified Data.Map as Map
+import qualified Data.Set as Set
+import Control.Monad.State
+import Control.Monad (ap)
+
+class Monad m => GameStateValidation m where
+   checkistargetException :: ObjectName -> m ()
+   checkistargetBool :: ObjectName -> m Bool
+   checkisaelementofException :: ObjectName -> ObjectName -> m ()
+   checkingammaException :: ObjectName -> m ()
+
+instance GameStateValidation GameState where
+  checkistargetBool objname = do
+                            (GameEnv gamma _, _) <- GameState get
+                            case Map.lookup objname gamma of
+                              Nothing -> error (objname ++ " object not found")
+                              Just ttype -> if ttype == TTarget then return True else return False
+  checkistargetException objname = do
+                            (GameEnv gamma _, _) <- GameState get
+                            case Map.lookup objname gamma of
+                              Nothing -> throwException (objname ++ " object not found")
+                              Just ttype -> if ttype == TTarget then return () else throwException (objname ++ " is not a target")
+  checkisaelementofException elementname objectname = do
+                                        (GameEnv _ objectmap, _) <- GameState get
+                                        case Map.lookup objectname objectmap of
+                                          Nothing -> throwException (objectname ++ " object not found")
+                                          Just odata -> if Set.member elementname (elements odata) then return ()
+                                                        else throwException (elementname ++ " is not an element of "++ objectname)
+  checkingammaException objectname = do
+                          (GameEnv gamma _, _) <- GameState get
+                          case Map.lookup objectname gamma of
+                            Nothing -> throwException (objectname ++ " object not found")
+                            Just _ -> return ()
 
 
 validateGameDefinition :: GameDefinition ->  ObjectName -> GameState ()

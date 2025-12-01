@@ -8,7 +8,7 @@ import Control.Monad (when)
 import PrettyPrinter
 import qualified Data.Set as Set
 import qualified Data.Map as Map
-import ExpressionValidator (validateGameDefinition)
+import ExpressionValidator
 
 -- Evaluador de condiciones
 evalCond :: Conditions -> GameState Bool

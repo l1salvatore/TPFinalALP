@@ -74,10 +74,6 @@ instance MonadGameIO GameState where
 class Monad m => GameStateObjectsMonad m where
    insertnamewithtype :: ObjectName -> Type -> m ()
    insertobjectdata :: ObjectName -> ObjectData -> m ()
-   checkistargetException :: ObjectName -> m ()
-   checkistargetBool :: ObjectName -> m Bool
-   checkisaelementofException :: ObjectName -> ObjectName -> m ()
-   checkingammaException :: ObjectName -> m ()
    getelements :: ObjectName -> m Elements
    getobjectdata :: ObjectName -> m ObjectData
    getusecommands :: ObjectName -> m Sentences
@@ -91,31 +87,9 @@ instance GameStateObjectsMonad GameState where
                                GameState (put (GameEnv (Map.insert o t gamma) objectmap, (Map.insert o VLock blockmap, objectstack)))
                               else
                                GameState (put (GameEnv (Map.insert o t gamma) objectmap, (blockmap, objectstack)))
-  insertobjectdata :: ObjectName -> ObjectData -> GameState ()
   insertobjectdata name odata = do
                               (GameEnv gamma objectmap, sigma) <- GameState get
                               GameState (put (GameEnv gamma (Map.insert name odata objectmap), sigma))
-  checkistargetBool objname = do
-                            (GameEnv gamma _, _) <- GameState get
-                            case Map.lookup objname gamma of
-                              Nothing -> error (objname ++ " object not found")
-                              Just ttype -> if ttype == TTarget then return True else return False
-  checkistargetException objname = do
-                            (GameEnv gamma _, _) <- GameState get
-                            case Map.lookup objname gamma of
-                              Nothing -> throwException (objname ++ " object not found")
-                              Just ttype -> if ttype == TTarget then return () else throwException (objname ++ " is not a target")
-  checkisaelementofException elementname objectname = do
-                                        (GameEnv _ objectmap, _) <- GameState get
-                                        case Map.lookup objectname objectmap of
-                                          Nothing -> throwException (objectname ++ " object not found")
-                                          Just odata -> if Set.member elementname (elements odata) then return ()
-                                                        else throwException (elementname ++ " is not an element of "++ objectname)
-  checkingammaException objectname = do
-                          (GameEnv gamma _, _) <- GameState get
-                          case Map.lookup objectname gamma of
-                            Nothing -> throwException (objectname ++ " object not found")
-                            Just _ -> return ()
   getelements obj = do
           (GameEnv _ objectmap, _) <- GameState get
           case Map.lookup obj objectmap of
