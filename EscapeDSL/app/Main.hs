@@ -22,7 +22,13 @@ main = do
             let ast = parseEscapeRoom (alexScanTokens input)
             
             -- Ejecutar el juego con el AST parseado
-            result <- runExceptT (runStateT (runGameState (buildAndStartGame ast >> runGame)) (GameEnv emptyGamma emptyObjectsMap, (Map.empty, ["game"])))
+            result <- runExceptT (
+                        runStateT (
+                            runGameState (
+                                buildAndStartGame ast >> runGame)) 
+                                (GameEnv emptyGamma emptyObjectsMap
+                                , 
+                                (Map.empty, ["game"])))
             
             case result of
                 Left err -> putStrLn $ "Error: " ++ err

@@ -1,4 +1,6 @@
 {-# LANGUAGE GADTs #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
+
 module GameExec where
 
 import AST
@@ -7,7 +9,6 @@ import GameStateMonad
 import Control.Monad (when)
 import PrettyPrinter
 import qualified Data.Set as Set
-import qualified Data.Map as Map
 import ExpressionValidator
 
 -- Evaluador de condiciones

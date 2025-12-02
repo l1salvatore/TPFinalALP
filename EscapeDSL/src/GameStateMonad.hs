@@ -1,5 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
+
 module GameStateMonad where
 
 
@@ -30,6 +32,7 @@ data GameEnv = GameEnv {
 -- La mónada GameState maneja el mapa de objetos (Gamma) y el estado de los objetos y navegación (Sigma)
 newtype GameState a = GameState { runGameState :: StateT (GameEnv,Sigma) (ExceptT String IO) a }
 
+-- Declaro las instancias de Functor, Applicative y Gamestate. Me baso en la definición de mónada de StateT
 instance Functor GameState where
   fmap f (GameState s) = GameState (fmap f s)
 instance Applicative GameState where
@@ -39,6 +42,7 @@ instance Monad GameState where
   return = pure
   (GameState s) >>= f = GameState (s >>= \a -> runGameState (f a))
 
+-- La mónada GameState es un GameStateError. Tiene una definición llamada 'throwException'
 class Monad m => GameStateError m where
   throwException :: String -> m ()
 
@@ -56,18 +60,24 @@ class MonadGameIO m where
 
 instance MonadGameIO GameState where
   applyprettyprinter f x = GameState (lift (lift (f x)))
-  readusercmd = do o <- objectNavigationTop
-                   applyprettyprinter putStr o
-                   applyprettyprinter putStr ">"
-                   GameState (lift (lift (do hFlush stdout; getLine)))
-  showrootgame =  do objectmap <- getObjectMap 
-                     xs <- getNavigationStack
-                     case xs of
+  -- read user cmd
+  readusercmd = do o <- objectNavigationTop -- Toma el elemento superior de la pila (El current)
+                   applyprettyprinter putStr o -- Lo imprime
+                   applyprettyprinter putStr ">" -- Imprime un prompt. La idea es tener algo como 'current>'
+                   GameState (lift (lift (do hFlush stdout; getLine))) -- Lee la entrada del usuario
+  showrootgame =  do objectmap <- getObjectMap -- Consulto el mapa de objetos
+                     xs <- getNavigationStack -- Consulto la pila de navegación
+                     case xs of 
+                        -- Si la pila sólo contiene "game", consulto el objeto "game" en el mapa
+                        -- Me traigo la data, principalmente los elements de game para imprimirlos
                         ["game"] -> case Map.lookup "game" objectmap of
                                              Nothing -> throwException "Game object not found"
                                              Just gamedata -> let mainobjects = elements gamedata
                                                               in applyprettyprinter ppElements mainobjects
+                        -- Si la pila es no vacía pero tiene un elemento distinto a game
+                        -- llamo a la función ppCurrentObject que realiza un pp de la estructura de xs                                  
                         (x:_)    -> applyprettyprinter ppCurrentObject x
+                        -- Caso contrario, lanzo la excepción de que la pila está vacía
                         _              -> throwException "Object stack is empty"
 
 
@@ -91,34 +101,34 @@ class Monad m => GameStateObjectsMonad m where
 
 
 instance GameStateObjectsMonad GameState where
-  getGamma = do 
+  getGamma = do
                 (GameEnv gamma _, (_, _)) <- GameState get
                 return gamma
-  putGamma g = do 
+  putGamma g = do
                   (GameEnv _ objectmap, (blockmap, objectstack)) <- GameState get
                   GameState (put (GameEnv g objectmap, (blockmap, objectstack)))
-  getBlockMap = do 
+  getBlockMap = do
                   (GameEnv _ _ , (blockmap, _)) <- GameState get
                   return blockmap
   putBlockMap g = do
                      (GameEnv gamma objectmap, (_, objectstack)) <- GameState get
                      GameState (put (GameEnv gamma objectmap, (g, objectstack)))
-  getObjectMap = do 
+  getObjectMap = do
                     (GameEnv _ objectmap, (_, _)) <- GameState get
                     return objectmap
-  putObjectMap g = do 
+  putObjectMap g = do
                      (GameEnv gamma _, (blockmap, objectstack)) <- GameState get
                      GameState (put (GameEnv gamma g, (blockmap, objectstack)))
-  getNavigationStack = do 
+  getNavigationStack = do
                       (GameEnv _ _, (_, objectstack)) <- GameState get
                       return objectstack
-  putNavigationStack g = do 
+  putNavigationStack g = do
                       (GameEnv gamma objectmap, (blockmap, _)) <- GameState get
                       GameState (put (GameEnv gamma objectmap, (blockmap, g)))
   insertnamewithtype o t = do
-                              gamma <- getGamma 
+                              gamma <- getGamma
                               if t == TTarget then
-                               do blockmap <- getBlockMap 
+                               do blockmap <- getBlockMap
                                   putGamma (Map.insert o t gamma)
                                   putBlockMap (Map.insert o VLock blockmap)
                               else
@@ -132,12 +142,12 @@ instance GameStateObjectsMonad GameState where
             Just itemdata -> return (elements itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
   getobjectdata obj = do
-          objectmap <- getObjectMap 
+          objectmap <- getObjectMap
           case Map.lookup obj objectmap of
             Just itemdata -> return itemdata
             Nothing -> error ("Object " ++ obj ++ " not found")
   getusecommands obj = do
-          objectmap <- getObjectMap 
+          objectmap <- getObjectMap
           case Map.lookup obj objectmap of
             Just itemdata -> return (sentences itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
@@ -186,8 +196,7 @@ instance GameStateNavigationStackMonad GameState where
           putBlockMap newobjectlockstate
    allunlocked :: GameState Bool
    allunlocked = do
-          objectlockstate <- getBlockMap
-          return (all (== VUnlock) (Map.elems objectlockstate))
+          all (== VUnlock) . Map.elems <$> getBlockMap
 
 
 

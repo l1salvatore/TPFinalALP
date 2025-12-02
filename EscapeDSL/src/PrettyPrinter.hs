@@ -1,10 +1,13 @@
 {-# LANGUAGE GADTs #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
+
 module PrettyPrinter where
 import AST (ObjectName)
 import qualified Data.Set as Set
 
 data UserErrorType = ObjectNotFound | CurrentObjectNotTarget | IncorrectLockCode 
   deriving (Show, Eq)
+
 ppMessage :: String -> IO ()
 ppMessage = putStrLn
 

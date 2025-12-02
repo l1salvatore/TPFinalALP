@@ -1,4 +1,6 @@
 {-# LANGUAGE GADTs #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
+
 module AST where
 
 -- Nombres de objetos
