@@ -18,19 +18,11 @@ import Stack
 import GHC.IO.Handle
 import GHC.IO.Handle.FD
 import PrettyPrinter
-
-
--- 1. El Entorno de Lectura (Read-Only)
--- Contiene los "planos" del juego que no cambian.
-data GameEnv = GameEnv {
-    envGamma :: Gamma,          -- Tipos
-    envObjects :: ObjectsMap    -- Definiciones (Elements, OnUse, Code)
-}
-
+import GHC.Base (when)
 
 
 -- La mónada GameState maneja el mapa de objetos (Gamma) y el estado de los objetos y navegación (Sigma)
-newtype GameState a = GameState { runGameState :: StateT (GameEnv,Sigma) (ExceptT String IO) a }
+newtype GameState a = GameState { runGameState :: StateT (GameEnvironment,Sigma) (ExceptT String IO) a }
 
 -- Declaro las instancias de Functor, Applicative y Gamestate. Me baso en la definición de mónada de StateT
 instance Functor GameState where
@@ -65,12 +57,12 @@ instance MonadGameIO GameState where
                    applyprettyprinter putStr o -- Lo imprime
                    applyprettyprinter putStr ">" -- Imprime un prompt. La idea es tener algo como 'current>'
                    GameState (lift (lift (do hFlush stdout; getLine))) -- Lee la entrada del usuario
-  showrootgame =  do objectmap <- getObjectMap -- Consulto el mapa de objetos
+  showrootgame =  do gameenvironment <- getObjectEnvironment -- Consulto el mapa de objetos
                      xs <- getNavigationStack -- Consulto la pila de navegación
-                     case xs of 
+                     case xs of
                         -- Si la pila sólo contiene "game", consulto el objeto "game" en el mapa
                         -- Me traigo la data, principalmente los elements de game para imprimirlos
-                        ["game"] -> case Map.lookup "game" objectmap of
+                        ["game"] -> case Map.lookup "game" gameenvironment of
                                              Nothing -> throwException "Game object not found"
                                              Just gamedata -> let mainobjects = elements gamedata
                                                               in applyprettyprinter ppElements mainobjects
@@ -81,17 +73,14 @@ instance MonadGameIO GameState where
                         _              -> throwException "Object stack is empty"
 
 
-
+-- La clase GameStateObjectsMonad
 class Monad m => GameStateObjectsMonad m where
-   getGamma :: m Gamma
-   putGamma :: Gamma -> m ()
-   getObjectMap :: m ObjectsMap
-   putObjectMap :: ObjectsMap -> m ()
+   getObjectEnvironment :: m GameEnvironment
+   putObjectEnvironment :: GameEnvironment -> m ()
    getBlockMap :: m BlockMap
    putBlockMap :: BlockMap -> m ()
    getNavigationStack :: m ObjectStack
    putNavigationStack :: ObjectStack -> m ()
-   insertnamewithtype :: ObjectName -> Type -> m ()
    insertobjectdata :: ObjectName -> ObjectData -> m ()
    getelements :: ObjectName -> m Elements
    getobjectdata :: ObjectName -> m ObjectData
@@ -101,54 +90,40 @@ class Monad m => GameStateObjectsMonad m where
 
 
 instance GameStateObjectsMonad GameState where
-  getGamma = do
-                (GameEnv gamma _, (_, _)) <- GameState get
-                return gamma
-  putGamma g = do
-                  (GameEnv _ objectmap, (blockmap, objectstack)) <- GameState get
-                  GameState (put (GameEnv g objectmap, (blockmap, objectstack)))
   getBlockMap = do
-                  (GameEnv _ _ , (blockmap, _)) <- GameState get
+                  (_ , (blockmap, _)) <- GameState get
                   return blockmap
   putBlockMap g = do
-                     (GameEnv gamma objectmap, (_, objectstack)) <- GameState get
-                     GameState (put (GameEnv gamma objectmap, (g, objectstack)))
-  getObjectMap = do
-                    (GameEnv _ objectmap, (_, _)) <- GameState get
-                    return objectmap
-  putObjectMap g = do
-                     (GameEnv gamma _, (blockmap, objectstack)) <- GameState get
-                     GameState (put (GameEnv gamma g, (blockmap, objectstack)))
+                     (gameenvironment, (_, objectstack)) <- GameState get
+                     GameState (put (gameenvironment, (g, objectstack)))
+  getObjectEnvironment = do
+                    (gameenvironment, (_, _)) <- GameState get
+                    return gameenvironment
+  putObjectEnvironment g = do
+                     (_, (blockmap, objectstack)) <- GameState get
+                     GameState (put (g, (blockmap, objectstack)))
   getNavigationStack = do
-                      (GameEnv _ _, (_, objectstack)) <- GameState get
+                      (_, (_, objectstack)) <- GameState get
                       return objectstack
   putNavigationStack g = do
-                      (GameEnv gamma objectmap, (blockmap, _)) <- GameState get
-                      GameState (put (GameEnv gamma objectmap, (blockmap, g)))
-  insertnamewithtype o t = do
-                              gamma <- getGamma
-                              if t == TTarget then
-                               do blockmap <- getBlockMap
-                                  putGamma (Map.insert o t gamma)
-                                  putBlockMap (Map.insert o VLock blockmap)
-                              else
-                                  putGamma (Map.insert o t gamma)
+                      (gameenvironment, (blockmap, _)) <- GameState get
+                      GameState (put (gameenvironment, (blockmap, g)))
   insertobjectdata name odata = do
-                              objectmap <- getObjectMap
-                              putObjectMap (Map.insert name odata objectmap)
+                              gameenvironment <- getObjectEnvironment
+                              putObjectEnvironment (Map.insert name odata gameenvironment)
   getelements obj = do
-          objectmap <- getObjectMap
-          case Map.lookup obj objectmap of
+          gameenvironment <- getObjectEnvironment
+          case Map.lookup obj gameenvironment of
             Just itemdata -> return (elements itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
   getobjectdata obj = do
-          objectmap <- getObjectMap
-          case Map.lookup obj objectmap of
+          gameenvironment <- getObjectEnvironment
+          case Map.lookup obj gameenvironment of
             Just itemdata -> return itemdata
             Nothing -> error ("Object " ++ obj ++ " not found")
   getusecommands obj = do
-          objectmap <- getObjectMap
-          case Map.lookup obj objectmap of
+          gameenvironment <- getObjectEnvironment
+          case Map.lookup obj gameenvironment of
             Just itemdata -> return (sentences itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
 
@@ -201,22 +176,22 @@ instance GameStateNavigationStackMonad GameState where
 
 
 
-buildObjectData :: [Declaration] -> (Int, Int, Int) -> GameState ObjectData
-buildObjectData [] _ = return emptyObjectData
-buildObjectData ((Unlock ncode) : xs) (e,s,n) = if n > 0 then error "Multiple declarations of unlock"
+buildObjectData :: [Declaration] -> Type -> (Int, Int, Int) -> GameState ObjectData
+buildObjectData [] t _ = return (emptyObjectData t)
+buildObjectData ((Unlock ncode) : xs) t (e,s,n) = if n > 0 then error "Multiple declarations of unlock"
                                                 else
                                                 do
-                                                  odata <- buildObjectData xs (e, s, n+1)
+                                                  odata <- buildObjectData xs t (e, s, n+1)
                                                   return (odata { code = Just ncode })
-buildObjectData ((Elements objList) : xs) (e,s,n)  = if e > 0 then error "Multiple declarations of elements"
+buildObjectData ((Elements objList) : xs) t (e,s,n)  = if e > 0 then error "Multiple declarations of elements"
                                                      else
                                                      do
-                                                      odata <- buildObjectData xs (e+1,s,n)
+                                                      odata <- buildObjectData xs t (e+1,s,n)
                                                       return (odata { elements = Set.fromList objList})
-buildObjectData ((OnUse onUseCode) : xs) (e,s,n) = if s > 0 then error "Multiple declarations of onUSe"
+buildObjectData ((OnUse onUseCode) : xs) t (e,s,n) = if s > 0 then error "Multiple declarations of onUSe"
                                                    else
                                                    do
-                                                      odata <- buildObjectData xs (e,s+1,n)
+                                                      odata <- buildObjectData xs t (e,s+1,n)
                                                       return (odata { sentences = onUseCode })
 
 buildEnvironment :: GameDefinition -> GameState ()
@@ -224,9 +199,10 @@ buildEnvironment [] = return ()
 buildEnvironment ((Game objList) :xs) = do
                                             buildEnvironment (ObjectDef TItem "game" [Elements objList]: xs)
 buildEnvironment ((ObjectDef typ name decls):xs) = do
-                                                      odata <- buildObjectData decls (0,0,0)
-                                                      insertnamewithtype name typ
+                                                      odata <- buildObjectData decls typ (0,0,0)
                                                       insertobjectdata name odata
+                                                      when (typ == TTarget) $ do blockmap <- getBlockMap
+                                                                                 putBlockMap (Map.insert name VLock blockmap)
                                                       buildEnvironment xs
 
 

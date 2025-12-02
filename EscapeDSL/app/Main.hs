@@ -26,7 +26,7 @@ main = do
                         runStateT (
                             runGameState (
                                 buildAndStartGame ast >> runGame)) 
-                                (GameEnv emptyGamma emptyObjectsMap
+                                (emptyGameEnvironment
                                 , 
                                 (Map.empty, ["game"])))
             

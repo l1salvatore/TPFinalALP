@@ -10,21 +10,22 @@ import qualified Data.Set as Set
 
 
 -- Objetos O: ObjectName -> Elements x Sentences x (N u {e})
-type ObjectsMap = Map.Map ObjectName ObjectData
+type GameEnvironment = Map.Map ObjectName ObjectData
 -- El mapa de objetos vacío
-emptyObjectsMap :: ObjectsMap
-emptyObjectsMap = Map.empty
+emptyGameEnvironment :: GameEnvironment
+emptyGameEnvironment = Map.empty
 
 
 
--- Elements x Sentences x (N u {e}) ; La data del juego
+-- Elements x Sentences x (N u {e}) type ; La data del juego
 data ObjectData = ObjectData
   { elements :: Set.Set ObjectName,
     sentences :: [Sentence],
-    code :: Maybe UnlockCode
+    code :: Maybe UnlockCode,
+    objecttype :: Type
   } deriving (Show, Eq)
 -- La data vacía o zero
-emptyObjectData :: ObjectData
+emptyObjectData :: Type -> ObjectData
 emptyObjectData = ObjectData Set.empty [] Nothing
 
 
@@ -33,16 +34,6 @@ emptyObjectData = ObjectData Set.empty [] Nothing
 -- Los elementos es un conjunto de nombres de objetos
 -- Elements = Partes de ObjectName
 type Elements = Set.Set ObjectName
-
-
-
--- El entorno de tipos gamma. 
--- Gamma : ObjectName -> Type
-type Gamma = Map.Map ObjectName Type
--- El mapa de objetos vacío, el estado inicial
-emptyGamma :: Gamma
-emptyGamma = Map.empty
-
 
 
 -- El tipo de dato de bloqueo de un objeto: puede ser locked o unlocked

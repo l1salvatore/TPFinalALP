@@ -1,0 +1,27 @@
+
+
+game {
+    DiarioSecreto,
+    GafasMagicas
+}
+
+target DiarioSecreto {
+    unlock: 122025
+
+    onuse {
+        show "Querido diario: Hoy estoy por rendir Análisis de Lenguajes de Programación"
+    }
+}
+
+item GafasMagicas {
+    unlock: 2025
+
+    elements {
+        DiarioSecreto
+    }
+    
+    onuse {
+        if DiarioSecreto is locked -> show "Las gafas ven un aura ROJA alrededor del diario.",
+        if DiarioSecreto is unlocked -> show "Las gafas ven un aura VERDE. El diario es seguro."
+    }
+}

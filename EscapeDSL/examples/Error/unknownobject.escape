@@ -8,7 +8,7 @@ target MainDoor {
 
 item OldPaper {
     onuse {
-        show sarasa
+        show icecream
     }
 
 

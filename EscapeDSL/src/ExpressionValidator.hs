@@ -14,28 +14,28 @@ class Monad m => GameStateValidation m where
    checkistargetException :: ObjectName -> m ()
    checkistargetBool :: ObjectName -> m Bool
    checkisaelementofException :: ObjectName -> ObjectName -> m ()
-   checkingammaException :: ObjectName -> m ()
+   checkObjectExist :: ObjectName -> m ()
 
 instance GameStateValidation GameState where
   checkistargetBool objname = do
-                            gamma <- getGamma
-                            case Map.lookup objname gamma of
+                            gameenvironment <- getObjectEnvironment
+                            case Map.lookup objname gameenvironment of
                               Nothing -> error (objname ++ " object not found")
-                              Just ttype -> if ttype == TTarget then return True else return False
+                              Just odata -> if objecttype odata == TTarget then return True else return False
   checkistargetException objname = do
-                            gamma <- getGamma
-                            case Map.lookup objname gamma of
+                            gameenvironment <- getObjectEnvironment
+                            case Map.lookup objname gameenvironment of
                               Nothing -> throwException (objname ++ " object not found")
-                              Just ttype -> if ttype == TTarget then return () else throwException (objname ++ " is not a target")
+                              Just odata -> if objecttype odata == TTarget then return () else throwException (objname ++ " is not a target")
   checkisaelementofException elementname objectname = do
-                                        objectmap <- getObjectMap
-                                        case Map.lookup objectname objectmap of
+                                        gameenvironment <- getObjectEnvironment
+                                        case Map.lookup objectname gameenvironment of
                                           Nothing -> throwException (objectname ++ " object not found")
                                           Just odata -> if Set.member elementname (elements odata) then return ()
                                                         else throwException (elementname ++ " is not an element of "++ objectname)
-  checkingammaException objectname = do
-                          gamma <- getGamma
-                          case Map.lookup objectname gamma of
+  checkObjectExist objectname = do
+                          gameenvironment <- getObjectEnvironment
+                          case Map.lookup objectname gameenvironment of
                             Nothing -> throwException (objectname ++ " object not found")
                             Just _ -> return ()
 
@@ -45,15 +45,15 @@ validateGameDefinition [] _ = return ()
 validateGameDefinition (Game elems : rest) currentobject = do
                                                                     validateElements elems  currentobject
                                                                     validateGameDefinition rest  currentobject
-                                                                    
+
 validateGameDefinition (ObjectDef _ objname decls : rest)  currentobject = do
                                                                             validateDeclarations decls  objname
                                                                             validateGameDefinition rest  currentobject
 
 validateDeclarations :: [Declaration] ->  ObjectName -> GameState ()
 validateDeclarations [] _ = return ()
-validateDeclarations (Unlock _ : rest) currentobject = do 
-                                                               checkistargetException currentobject 
+validateDeclarations (Unlock _ : rest) currentobject = do
+                                                               checkistargetException currentobject
                                                                validateDeclarations rest  currentobject
 validateDeclarations (Elements elems : rest) currentobject = do
                                                                      validateElements elems  currentobject
@@ -73,31 +73,31 @@ validateSentences (IfCommand conditions command : rest)  currentobject = do
                                                                                 validateSentences rest currentobject
 
 validateCommand :: Command ->  ObjectName -> GameState ()
-validateCommand (Show (ShowObject x)) currentobject =  do 
-                                                               checkingammaException x
-                                                               checkingammaException currentobject
+validateCommand (Show (ShowObject x)) currentobject =  do
+                                                               checkObjectExist x
+                                                               checkObjectExist currentobject
                                                                checkisaelementofException x currentobject
 validateCommand (Show (ShowMessage _)) _ = return ()
 
 validateConditions :: Conditions ->  ObjectName -> GameState ()
 validateConditions Locked currentobject = checkistargetException currentobject
 validateConditions Unlocked currentobject = checkistargetException currentobject
-validateConditions (ObjectLocked o) currentobject = do 
+validateConditions (ObjectLocked o) currentobject = do
                                                             checkisaelementofException o currentobject
                                                             checkistargetException o
-validateConditions (ObjectUnlocked o) currentobject = do   
-                                                              checkisaelementofException o currentobject 
-                                                              checkistargetException o 
-validateConditions (And c1 c2)  currentobject = do 
+validateConditions (ObjectUnlocked o) currentobject = do
+                                                              checkisaelementofException o currentobject
+                                                              checkistargetException o
+validateConditions (And c1 c2)  currentobject = do
                                                        validateConditions c1 currentobject
                                                        validateConditions c2 currentobject
-validateConditions (Or c1 c2)  currentobject = do 
+validateConditions (Or c1 c2)  currentobject = do
                                                       validateConditions c1 currentobject
                                                       validateConditions c2 currentobject
 
 
 validateElements :: [ObjectName] ->  ObjectName -> GameState ()
 validateElements [] _ = return ()
-validateElements (objname : xs)  currentobject = do 
-                                                    checkingammaException objname
+validateElements (objname : xs)  currentobject = do
+                                                    checkObjectExist objname
                                                     validateElements xs currentobject
