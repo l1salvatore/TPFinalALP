@@ -8,7 +8,8 @@ import Parser.Lexer
 %tokentype { Token }
 %error { parseError }
 
-%left "and" "or"
+%left or
+%left and
 %left ','
 
 %token
@@ -39,7 +40,7 @@ import Parser.Lexer
 %%
 
 GameDefinition : Definition                          { [$1] }
-               | GameDefinition Definition           { $1 ++ [$2] }
+               | GameDefinition Definition           { $2 : $1 }
 
 Definition : game '{' Elements '}'                   { Game $3 }
            | Type objectname '{' Declarations '}'    { ObjectDef $1 $2 $4 }
@@ -48,17 +49,17 @@ Type : target                                        { TTarget }
      | item                                          { TItem }
 
 Declarations : Declaration                           { [$1] }
-             | Declarations Declaration              { $1 ++ [$2] }
+             | Declarations Declaration              { $2 : $1 }
 
 Declaration : unlock ':' number                      { Unlock $3 }
             | elements '{' Elements '}'              { Elements $3 }
             | onuse '{' Sentences '}'                { OnUse $3 }
 
-Elements : objectname                               { [$1] }
-         | Elements ',' Elements                    { $1 ++ $3 }
+Elements : objectname                                { [$1] }
+         | objectname ',' Elements                   { $1 : $3 }
 
-Sentences : Sentence                                { [$1] }
-          | Sentences ',' Sentence                  { $1 ++ [$3] }
+Sentences : Sentence                                 { [$1] }
+          | Sentence  ',' Sentences                  { $1 : $3 }
 
 Sentence : if Condition "->" Command                { IfCommand $2 $4 }
          | Command                                  { Command $1 }

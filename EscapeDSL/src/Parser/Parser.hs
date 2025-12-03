@@ -25,13 +25,13 @@ data HappyAbsSyn t4 t5 t6 t7 t8 t9 t10 t11 t12 t13 t14
 	| HappyAbsSyn14 t14
 
 happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int
-happyExpList = Happy_Data_Array.listArray (0,94) ([49152,1,0,112,0,0,0,0,0,16,0,8,0,0,0,0,0,1792,0,0,0,0,0,256,0,128,0,56,0,0,272,0,0,0,0,0,0,4096,0,4110,0,0,0,0,2048,0,8192,0,0,8,0,12,0,0,64,0,8192,0,0,0,0,0,0,0,0,0,0,0,272,0,17408,0,0,0,0,0,0,8384,4,0,1280,0,0,0,0,0,0,0,0,33152,0,0,0,0,0,0,8384,4,16384,0,0,0,0,192,0,0,0,0,0,0,3072,0,0,280,0,8384,4,12288,264,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+happyExpList = Happy_Data_Array.listArray (0,94) ([49152,1,0,112,0,0,0,0,0,16,0,8,0,0,0,0,0,1792,0,0,0,0,0,256,0,128,0,56,0,0,272,0,0,0,0,0,0,4096,0,4110,0,0,0,0,2048,0,8192,0,0,8,0,12,0,0,64,0,8192,0,0,0,0,0,0,0,0,0,0,0,272,0,1024,0,0,16,0,0,0,8384,4,0,1280,0,0,0,0,0,0,0,0,33152,0,0,0,0,0,0,8384,4,16384,0,0,3,0,0,0,0,0,0,0,0,3072,0,0,280,0,8384,4,12288,264,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0
 	])
 
 {-# NOINLINE happyExpListPerState #-}
 happyExpListPerState st =
     token_strs_expected
-  where token_strs = ["error","%dummy","%start_parseEscapeRoom","GameDefinition","Definition","Type","Declarations","Declaration","Elements","Sentences","Sentence","Command","ShowMode","Status","game","target","item","unlock","elements","onuse","if","show","locked","unlocked","is","and","or","'{'","'}'","'('","')'","':'","','","\"->\"","ident","number","string","%eof"]
+  where token_strs = ["error","%dummy","%start_parseEscapeRoom","GameDefinition","Definition","Type","Declarations","Declaration","Elements","Sentences","Sentence","Command","ShowMode","Condition","game","target","item","unlock","elements","onuse","if","show","locked","unlocked","is","and","or","'{'","'}'","'('","')'","':'","','","\"->\"","objectname","number","string","%eof"]
         bit_start = st Prelude.* 38
         bit_end = (st Prelude.+ 1) Prelude.* 38
         read_bit = readArrayBit happyExpList
@@ -148,10 +148,10 @@ action_28 (29) = happyShift action_44
 action_28 (33) = happyShift action_15
 action_28 _ = happyFail (happyExpListPerState 28)
 
-action_29 (29) = happyShift action_42
-action_29 (33) = happyShift action_43
+action_29 (29) = happyShift action_43
 action_29 _ = happyFail (happyExpListPerState 29)
 
+action_30 (33) = happyShift action_42
 action_30 _ = happyReduce_14
 
 action_31 _ = happyReduce_17
@@ -193,13 +193,14 @@ action_40 _ = happyFail (happyExpListPerState 40)
 action_41 (25) = happyShift action_46
 action_41 _ = happyFail (happyExpListPerState 41)
 
-action_42 _ = happyReduce_11
+action_42 (21) = happyShift action_32
+action_42 (22) = happyShift action_33
+action_42 (10) = happyGoto action_45
+action_42 (11) = happyGoto action_30
+action_42 (12) = happyGoto action_31
+action_42 _ = happyFail (happyExpListPerState 42)
 
-action_43 (21) = happyShift action_32
-action_43 (22) = happyShift action_33
-action_43 (11) = happyGoto action_45
-action_43 (12) = happyGoto action_31
-action_43 _ = happyFail (happyExpListPerState 43)
+action_43 _ = happyReduce_11
 
 action_44 _ = happyReduce_10
 
@@ -235,11 +236,8 @@ action_50 _ = happyFail (happyExpListPerState 50)
 action_51 _ = happyReduce_16
 
 action_52 (26) = happyShift action_48
-action_52 (27) = happyShift action_49
 action_52 _ = happyReduce_26
 
-action_53 (26) = happyShift action_48
-action_53 (27) = happyShift action_49
 action_53 _ = happyReduce_25
 
 action_54 _ = happyReduce_27
@@ -259,7 +257,7 @@ happyReduce_2 = happySpecReduce_2  4 happyReduction_2
 happyReduction_2 (HappyAbsSyn5  happy_var_2)
 	(HappyAbsSyn4  happy_var_1)
 	 =  HappyAbsSyn4
-		 (happy_var_1 ++ [happy_var_2]
+		 (happy_var_2 : happy_var_1
 	)
 happyReduction_2 _ _  = notHappyAtAll 
 
@@ -307,7 +305,7 @@ happyReduce_8 = happySpecReduce_2  7 happyReduction_8
 happyReduction_8 (HappyAbsSyn8  happy_var_2)
 	(HappyAbsSyn7  happy_var_1)
 	 =  HappyAbsSyn7
-		 (happy_var_1 ++ [happy_var_2]
+		 (happy_var_2 : happy_var_1
 	)
 happyReduction_8 _ _  = notHappyAtAll 
 
@@ -364,11 +362,11 @@ happyReduction_14 (HappyAbsSyn11  happy_var_1)
 happyReduction_14 _  = notHappyAtAll 
 
 happyReduce_15 = happySpecReduce_3  10 happyReduction_15
-happyReduction_15 (HappyAbsSyn11  happy_var_3)
+happyReduction_15 (HappyAbsSyn10  happy_var_3)
 	_
-	(HappyAbsSyn10  happy_var_1)
+	(HappyAbsSyn11  happy_var_1)
 	 =  HappyAbsSyn10
-		 (happy_var_1 ++ [happy_var_3]
+		 (happy_var_1 : happy_var_3
 	)
 happyReduction_15 _ _ _  = notHappyAtAll 
 
