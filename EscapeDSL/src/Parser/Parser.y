@@ -10,7 +10,6 @@ import Parser.Lexer
 
 %left or
 %left and
-%left ','
 
 %token
     game        { TokenGame }

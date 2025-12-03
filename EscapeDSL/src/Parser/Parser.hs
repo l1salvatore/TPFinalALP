@@ -25,7 +25,7 @@ data HappyAbsSyn t4 t5 t6 t7 t8 t9 t10 t11 t12 t13 t14
 	| HappyAbsSyn14 t14
 
 happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int
-happyExpList = Happy_Data_Array.listArray (0,94) ([49152,1,0,112,0,0,0,0,0,16,0,8,0,0,0,0,0,1792,0,0,0,0,0,256,0,128,0,56,0,0,272,0,0,0,0,0,0,4096,0,4110,0,0,0,0,2048,0,8192,0,0,8,0,12,0,0,64,0,8192,0,0,0,0,0,0,0,0,0,0,0,272,0,1024,0,0,16,0,0,0,8384,4,0,1280,0,0,0,0,0,0,0,0,33152,0,0,0,0,0,0,8384,4,16384,0,0,3,0,0,0,0,0,0,0,0,3072,0,0,280,0,8384,4,12288,264,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0
+happyExpList = Happy_Data_Array.listArray (0,92) ([49152,1,0,112,0,0,0,0,0,16,0,8,0,0,0,0,0,1792,0,0,0,0,0,256,0,128,0,56,0,0,16,0,16384,0,0,64,0,0,0,4110,0,0,0,0,2048,0,8192,0,0,8,0,12,0,0,64,0,8192,0,0,0,0,0,0,0,0,0,0,0,16,0,1024,0,0,16,0,0,0,8384,4,0,1280,0,0,0,0,0,0,0,0,33152,0,0,0,0,0,0,8384,4,16384,0,0,3,0,0,0,0,0,0,0,0,3072,0,0,280,0,8384,4,12288,264,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0
 	])
 
 {-# NOINLINE happyExpListPerState #-}
@@ -92,17 +92,17 @@ action_11 (7) = happyGoto action_16
 action_11 (8) = happyGoto action_17
 action_11 _ = happyFail (happyExpListPerState 11)
 
-action_12 (29) = happyShift action_14
-action_12 (33) = happyShift action_15
+action_12 (29) = happyShift action_15
 action_12 _ = happyFail (happyExpListPerState 12)
 
+action_13 (33) = happyShift action_14
 action_13 _ = happyReduce_12
 
-action_14 _ = happyReduce_3
+action_14 (35) = happyShift action_13
+action_14 (9) = happyGoto action_26
+action_14 _ = happyFail (happyExpListPerState 14)
 
-action_15 (35) = happyShift action_13
-action_15 (9) = happyGoto action_26
-action_15 _ = happyFail (happyExpListPerState 15)
+action_15 _ = happyReduce_3
 
 action_16 (18) = happyShift action_18
 action_16 (19) = happyShift action_19
@@ -145,7 +145,6 @@ action_26 _ = happyReduce_13
 action_27 _ = happyReduce_9
 
 action_28 (29) = happyShift action_44
-action_28 (33) = happyShift action_15
 action_28 _ = happyFail (happyExpListPerState 28)
 
 action_29 (29) = happyShift action_43
@@ -348,9 +347,9 @@ happyReduction_12 _  = notHappyAtAll
 happyReduce_13 = happySpecReduce_3  9 happyReduction_13
 happyReduction_13 (HappyAbsSyn9  happy_var_3)
 	_
-	(HappyAbsSyn9  happy_var_1)
+	(HappyTerminal (TokenIdent happy_var_1))
 	 =  HappyAbsSyn9
-		 (happy_var_1 ++ happy_var_3
+		 (happy_var_1 : happy_var_3
 	)
 happyReduction_13 _ _ _  = notHappyAtAll 
 
