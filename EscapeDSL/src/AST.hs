@@ -35,9 +35,6 @@ newtype Command = Show ShowMode
 -- Una lista de definiciones
 type GameDefinition = [Definition]
 
--- Las sentencias es una lista de sentencias
-type Sentences = [Sentence]
-
 -- Definiciones: Un juego con una lista de objetos o la definición de un objeto con su tipo, nombre y declaraciones
 data Definition = Game [ObjectName]
                 | ObjectDef Type ObjectName [Declaration]
@@ -47,7 +44,7 @@ data Definition = Game [ObjectName]
 -- Puede ser un desbloqueo, una lista de elementos o una lista de sentencias que se ejecutan al usar el objeto
 data Declaration = Unlock Int
                  | Elements [ObjectName]
-                 | OnUse Sentences
+                 | OnUse [Sentence]
   deriving (Show, Eq)                   
            
 -- Condiciones para los comandos condicionales. 

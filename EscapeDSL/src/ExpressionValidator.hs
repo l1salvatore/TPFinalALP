@@ -8,7 +8,7 @@ import GameStateMonad
 import GameModel
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import Control.Monad.State
+import Control.Monad.State ()
 
 class Monad m => GameStateValidation m where
    checkistargetException :: ObjectName -> m ()

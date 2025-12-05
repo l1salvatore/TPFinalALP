@@ -83,8 +83,8 @@ class Monad m => GameStateObjectsMonad m where
    putNavigationStack :: ObjectStack -> m ()
    insertobjectdata :: ObjectName -> ObjectData -> m ()
    getelements :: ObjectName -> m Elements
-   getobjectdata :: ObjectName -> m ObjectData
-   getusecommands :: ObjectName -> m Sentences
+   getcode     :: ObjectName -> m (Maybe UnlockCode)
+   getusecommands :: ObjectName -> m [Sentence]
 
 
 
@@ -116,16 +116,17 @@ instance GameStateObjectsMonad GameState where
           case Map.lookup obj gameenvironment of
             Just itemdata -> return (elements itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
-  getobjectdata obj = do
-          gameenvironment <- getObjectEnvironment
-          case Map.lookup obj gameenvironment of
-            Just itemdata -> return itemdata
-            Nothing -> error ("Object " ++ obj ++ " not found")
   getusecommands obj = do
           gameenvironment <- getObjectEnvironment
           case Map.lookup obj gameenvironment of
             Just itemdata -> return (sentences itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
+  getcode obj   = do
+          gameenvironment <- getObjectEnvironment
+          case Map.lookup obj gameenvironment of
+            Just itemdata -> return (code itemdata)
+            Nothing -> error ("Object " ++ obj ++ " not found")
+
 
 class Monad m => GameStateNavigationStackMonad m where
  -- Obtiene el objeto en la cima de la pila de navegación
