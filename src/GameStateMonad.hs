@@ -85,7 +85,12 @@ class Monad m => GameStateObjectsMonad m where
    getelements :: ObjectName -> m Elements
    getcode     :: ObjectName -> m (Maybe UnlockCode)
    getusecommands :: ObjectName -> m [Sentence]
-
+  -- Obtiene el estado de bloqueo de un objeto
+   getLockStatus :: ObjectName -> m BlockData
+  -- Desbloquea un objeto
+   unlock :: ObjectName -> m ()
+  -- Verifica si todos los objetos están desbloqueados
+   allunlocked :: m Bool
 
 
 
@@ -126,7 +131,19 @@ instance GameStateObjectsMonad GameState where
           case Map.lookup obj gameenvironment of
             Just itemdata -> return (code itemdata)
             Nothing -> error ("Object " ++ obj ++ " not found")
-
+  getLockStatus :: ObjectName -> GameState BlockData
+  getLockStatus o = do
+          objectlockstate <- getBlockMap
+          case Map.lookup o objectlockstate of
+            Nothing -> error ("Lock status for object " ++ o ++ " not found")
+            Just status -> return status
+  unlock o = do
+          objectlockstate <- getBlockMap
+          let newobjectlockstate = Map.insert o VUnlock objectlockstate
+          putBlockMap newobjectlockstate
+  allunlocked :: GameState Bool
+  allunlocked = do
+          all (== VUnlock) . Map.elems <$> getBlockMap
 
 class Monad m => GameStateNavigationStackMonad m where
  -- Obtiene el objeto en la cima de la pila de navegación
@@ -135,12 +152,7 @@ class Monad m => GameStateNavigationStackMonad m where
    objectNavigationPush :: ObjectName -> m ()
   -- Saca el objeto en la cima de la pila de navegación
    objectNavigationPop :: m ()
-  -- Obtiene el estado de bloqueo de un objeto
-   getLockStatus :: ObjectName -> m BlockData
-  -- Desbloquea un objeto
-   unlock :: ObjectName -> m ()
-  -- Verifica si todos los objetos están desbloqueados
-   allunlocked :: m Bool
+
 
 instance GameStateNavigationStackMonad GameState where
    objectNavigationTop = do
@@ -160,19 +172,7 @@ instance GameStateNavigationStackMonad GameState where
             _              -> do let newstack = pop objectstack in
                                    putNavigationStack newstack
                                  showrootgame
-   getLockStatus :: ObjectName -> GameState BlockData
-   getLockStatus o = do
-          objectlockstate <- getBlockMap
-          case Map.lookup o objectlockstate of
-            Nothing -> error ("Lock status for object " ++ o ++ " not found")
-            Just status -> return status
-   unlock o = do
-          objectlockstate <- getBlockMap
-          let newobjectlockstate = Map.insert o VUnlock objectlockstate
-          putBlockMap newobjectlockstate
-   allunlocked :: GameState Bool
-   allunlocked = do
-          all (== VUnlock) . Map.elems <$> getBlockMap
+
 
 
 
