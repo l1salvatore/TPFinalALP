@@ -1,15 +1,14 @@
 {-# LANGUAGE GADTs #-}
 {-# OPTIONS_GHC -Wno-missing-export-lists #-}
 
-module GameExec where
+module Steps.Step5.GameExec where
 
-import AST
 import GameModel
 import GameStateMonad
 import Control.Monad (when)
 import PrettyPrinter
-import qualified Data.Set as Set
-import ExpressionValidator
+import Steps.Step2.ExpressionValidator
+import Steps.Step4.ObjectSentences
 
 -- Empezamos con la función runGame que es un GameState ()
 runGame :: GameState ()
@@ -44,7 +43,8 @@ processUserInput msg = case parseInput msg of -- Parseo la entrada del usuario
                              -- El usuario quiere seleccionar un objeto
                              InputSelect obj -> do current <- objectNavigationTop -- Extraigo el objeto actual en la pila de navegación
                                                    elements <- getelements current -- Extraigo los elementos del objeto actual
-                                                   if Set.member obj elements -- Si el objeto que quiere seleccionar el usuario está entre los elementos del objeto actual, es decir, es alcanzable
+                                                   check <- isMemberOf obj elements -- Si el objeto que quiere seleccionar el usuario está entre los elementos del objeto actual, es decir, es alcanzable
+                                                   if check 
                                                      then do objectNavigationPush obj -- Pusheo en la pila de navegación al objeto seleccionado, es decir, entro en el contexto del objeto seleccionado
                                                              applyprettyprinter ppSelectObject obj -- Imprimo el objeto seleccionado
                                                      else applyprettyprinter (ppUserError ObjectNotFound) obj -- Si no está el objeto, imprimo un mensaje de error "Objecto no encontrado"
@@ -71,42 +71,6 @@ processUserInput msg = case parseInput msg of -- Parseo la entrada del usuario
                                                                when (status == VLock) $ applyprettyprinter ppMessage "It seems this object has an unlock mechanism." -- Si el status es locked, imprimo el mensaje de sugerencia "Este objeto parece que tiene un mecanismo de desbloqueo"
                                             sentences <- getusecommands current -- Extraigo las sentencias del objeto
                                             execute sentences -- Ejecuto las sentencias
-
--- Ejecucion de las sentencias
-execute :: [Sentence] -> GameState ()
-execute [] = return () -- No hay ninguna sentencia, retorno ()
-execute ((Command c):xs) = do executeCmd c -- Ejecuto el comando c
-                              execute xs -- Ejecuto el resto de la lista
-execute ((IfCommand cond c):xs) = do b <- evalCond cond -- Evaluo la condición
-                                     when b $ executeCmd c -- Si b es verdadera, ejecuto c
-                                     execute xs -- Ejecuto el resto de la lista
-
--- Ejecuto los comandos
-executeCmd :: Command -> GameState ()
--- ejecuto el comando 'Show msg', imprimo el mensaje msg
-executeCmd (Show (ShowMessage msg)) = applyprettyprinter ppMessage msg
--- ejecuto el comando 'Show obj', imprimo el objeto obj
-executeCmd (Show (ShowObject obj)) = applyprettyprinter ppShowObject obj
-
-
--- Evaluador de condiciones
-evalCond :: Conditions -> GameState Bool
-evalCond Locked = do current <- objectNavigationTop -- Obtengo el primer elemento de la pila (el actual de la navegación)
-                     status <- getLockStatus current -- Chequeo si está bloqueado o desbloqueado
-                     return (status == VLock) -- Retorno true si está locked, o false si está unlocked
-evalCond Unlocked = do current <- objectNavigationTop -- Obtengo el primer elemento de la pila (el actual de la navegación)
-                       status <- getLockStatus current -- Chequeo si está bloqueado o desbloqueado
-                       return (status == VUnlock) -- Retorno true si está unlocked, o false si está locked
-evalCond (ObjectLocked o) = do status <- getLockStatus o -- Obtengo el estado del objeto o
-                               return (status == VLock)  -- Retorno true si está locked, o false si está unlocked
-evalCond (ObjectUnlocked o) = do status <- getLockStatus o -- Obtengo el estado del objeto o
-                                 return (status == VUnlock)  -- Retorno true si está unlocked, o false si está locked
-evalCond (And c1 c2) = do v1 <- evalCond c1 -- Evaluo recursivamente c1
-                          v2 <- evalCond c2 -- Evaluo recursivamente c2
-                          return (v1 && v2) -- Retorno la conjunción de ambos v1 y v2
-evalCond (Or c1 c2) = do v1 <- evalCond c1 -- Evaluo recursivamente c1
-                         v2 <- evalCond c2 -- Evaluo recursivamente c2
-                         return (v1 || v2) -- Retorno la conjunción de ambos v1 y v2
 
 
 

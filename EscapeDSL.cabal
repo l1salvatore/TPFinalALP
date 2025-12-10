@@ -26,8 +26,6 @@ source-repository head
 library
   exposed-modules:
       AST
-      ExpressionValidator
-      GameExec
       GameModel
       GameStateMonad
       Lib
@@ -35,6 +33,11 @@ library
       Parser.Parser
       PrettyPrinter
       Stack
+      Steps.Step1.EnvironmentBuilder
+      Steps.Step2.ExpressionValidator
+      Steps.Step3.Conditions
+      Steps.Step4.ObjectSentences
+      Steps.Step5.GameExec
   other-modules:
       Paths_EscapeDSL
   autogen-modules:

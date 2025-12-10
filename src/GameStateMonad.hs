@@ -73,16 +73,28 @@ instance MonadGameIO GameState where
                         _              -> throwException "Object stack is empty"
 
 
--- La clase GameStateObjectsMonad
-class Monad m => GameStateObjectsMonad m where
+-- La clase GameStateMonad. Contiene las funciones necesarias para manipular el GameStateMonad
+class Monad m => GameStateMonad m where
+   -- Obtiene el mapa o entorno de objetos
    getObjectEnvironment :: m GameEnvironment
+   -- Dado un entorno de objetos, reemplaza el entorno actual por este nuevo en la mónada
    putObjectEnvironment :: GameEnvironment -> m ()
+   -- Dado un objeto y un entorno, devuelve la data correspondiente. O Nothing si no encuentra el objeto
+   getObjectData :: ObjectName -> GameEnvironment -> m (Maybe ObjectData)
+   -- Obtiene el mapa de bloqueos de la mónada 
    getBlockMap :: m BlockMap
+   -- Dado un mapa de bloqueos, reemplaza el mapa de bloqueos actual por este nuevo en la mónada
    putBlockMap :: BlockMap -> m ()
+   -- Dado un objeto, un estado Lock o Unlock, y un mapa de bloqueo, retorna un nuevo mapa de bloqueos con el par { objeto -> estado }
+   getNewBlockMap :: ObjectName -> BlockData -> BlockMap -> m BlockMap
+   -- Obtiene la pila de navegación de objetos
    getNavigationStack :: m ObjectStack
+   -- Dado una pila de navegación, reemplaza la pila de navegación actual por este nuevo en la mónada
    putNavigationStack :: ObjectStack -> m ()
+   -- Dado un objeto, la data del objeto , inserta 
    insertobjectdata :: ObjectName -> ObjectData -> m ()
    getelements :: ObjectName -> m Elements
+   isMemberOf :: ObjectName -> Elements -> m Bool
    getcode     :: ObjectName -> m (Maybe UnlockCode)
    getusecommands :: ObjectName -> m [Sentence]
   -- Obtiene el estado de bloqueo de un objeto
@@ -93,20 +105,21 @@ class Monad m => GameStateObjectsMonad m where
    allunlocked :: m Bool
 
 
-
-instance GameStateObjectsMonad GameState where
+instance GameStateMonad GameState where
   getBlockMap = do
                   (_ , (blockmap, _)) <- GameState get
                   return blockmap
   putBlockMap g = do
                      (gameenvironment, (_, objectstack)) <- GameState get
                      GameState (put (gameenvironment, (g, objectstack)))
+  getNewBlockMap o status bmap = return (Map.insert o status bmap)
   getObjectEnvironment = do
                     (gameenvironment, (_, _)) <- GameState get
                     return gameenvironment
   putObjectEnvironment g = do
                      (_, (blockmap, objectstack)) <- GameState get
                      GameState (put (g, (blockmap, objectstack)))
+  getObjectData o env = return (Map.lookup o env)
   getNavigationStack = do
                       (_, (_, objectstack)) <- GameState get
                       return objectstack
@@ -116,26 +129,27 @@ instance GameStateObjectsMonad GameState where
   insertobjectdata name odata = do
                               gameenvironment <- getObjectEnvironment
                               putObjectEnvironment (Map.insert name odata gameenvironment)
+  isMemberOf objname elementsset = return (Set.member objname elementsset)
   getelements obj = do
           gameenvironment <- getObjectEnvironment
           case Map.lookup obj gameenvironment of
             Just itemdata -> return (elements itemdata)
-            Nothing -> error ("Object " ++ obj ++ " not found")
+            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
   getusecommands obj = do
           gameenvironment <- getObjectEnvironment
           case Map.lookup obj gameenvironment of
             Just itemdata -> return (sentences itemdata)
-            Nothing -> error ("Object " ++ obj ++ " not found")
+            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
   getcode obj   = do
           gameenvironment <- getObjectEnvironment
           case Map.lookup obj gameenvironment of
             Just itemdata -> return (code itemdata)
-            Nothing -> error ("Object " ++ obj ++ " not found")
+            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
   getLockStatus :: ObjectName -> GameState BlockData
   getLockStatus o = do
           objectlockstate <- getBlockMap
           case Map.lookup o objectlockstate of
-            Nothing -> error ("Lock status for object " ++ o ++ " not found")
+            Nothing -> error ("Unexpected Error: Lock status for object " ++ o ++ " not found")
             Just status -> return status
   unlock o = do
           objectlockstate <- getBlockMap
@@ -158,7 +172,7 @@ instance GameStateNavigationStackMonad GameState where
    objectNavigationTop = do
           objectstack <- getNavigationStack
           case peek objectstack of
-            Nothing -> error "Object stack is empty"
+            Nothing -> error "Unexpected Error: Object stack is empty"
             Just o -> return o
    objectNavigationPush o = do
           objectstack <- getNavigationStack
@@ -173,38 +187,6 @@ instance GameStateNavigationStackMonad GameState where
                                    putNavigationStack newstack
                                  showrootgame
 
-
-
-
-
-buildObjectData :: [Declaration] -> Type -> (Int, Int, Int) -> GameState ObjectData
-buildObjectData [] t _ = return (emptyObjectData t)
-buildObjectData ((Unlock ncode) : xs) t (e,s,n) = if n > 0 then error "Multiple declarations of unlock"
-                                                else
-                                                do
-                                                  odata <- buildObjectData xs t (e, s, n+1)
-                                                  return (odata { code = Just ncode })
-buildObjectData ((Elements objList) : xs) t (e,s,n)  = if e > 0 then error "Multiple declarations of elements"
-                                                     else
-                                                     do
-                                                      odata <- buildObjectData xs t (e+1,s,n)
-                                                      return (odata { elements = Set.fromList objList})
-buildObjectData ((OnUse onUseCode) : xs) t (e,s,n) = if s > 0 then error "Multiple declarations of onUSe"
-                                                   else
-                                                   do
-                                                      odata <- buildObjectData xs t (e,s+1,n)
-                                                      return (odata { sentences = onUseCode })
-
-buildEnvironment :: GameDefinition -> GameState ()
-buildEnvironment [] = return ()
-buildEnvironment ((Game objList) :xs) = do
-                                            buildEnvironment (ObjectDef TItem "game" [Elements objList]: xs)
-buildEnvironment ((ObjectDef typ name decls):xs) = do
-                                                      odata <- buildObjectData decls typ (0,0,0)
-                                                      insertobjectdata name odata
-                                                      when (typ == TTarget) $ do blockmap <- getBlockMap
-                                                                                 putBlockMap (Map.insert name VLock blockmap)
-                                                      buildEnvironment xs
 
 
 

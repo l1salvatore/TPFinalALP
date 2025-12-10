@@ -6,8 +6,9 @@ import Parser.Parser (parseEscapeRoom)
 import System.Environment (getArgs)
 import GameStateMonad
 import AST
-import ExpressionValidator
-import GameExec
+import Steps.Step2.ExpressionValidator
+import Steps.Step5.GameExec
+import Steps.Step1.EnvironmentBuilder
 import GameModel
 import Control.Monad.Except
 import Control.Monad.State
@@ -24,8 +25,8 @@ main = do
             -- Ejecutar el juego con el AST parseado
             result <- runExceptT (
                         runStateT (
-                            runGameState (
-                                buildAndStartGame ast >> runGame)) 
+                            runGameState ( 
+                                buildAndStartGame ast >> runGame)) -- Step 1 -> Step 2 -> Step 5
                                 (emptyGameEnvironment
                                 , 
                                 (Map.empty, ["game"])))
@@ -38,5 +39,5 @@ main = do
 -- Función para construir el entorno inicial del juego
 buildAndStartGame :: GameDefinition -> GameState ()
 buildAndStartGame ast = do 
-    buildEnvironment ast
-    validateGameDefinition ast "game"
+    buildEnvironment ast -- Step 1
+    validateGameDefinition ast "game" -- Step 2
