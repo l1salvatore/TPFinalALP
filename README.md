@@ -1,4 +1,4 @@
-# EscapeDSL - Domain Specific Language para Juegos de Escape
+# EscapeDSL - Lenguaje de Dominio Específico para Juegos de Escape
 
 Un lenguaje de dominio específico (DSL) textual implementado en Haskell para facilitar el modelado de la lógica de juegos de escape y actividades similares de resolución de problemas. Este proyecto implementa las cinco fases semánticas necesarias para la validación y ejecución de programas EscapeDSL.
 
