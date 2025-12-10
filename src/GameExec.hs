@@ -65,8 +65,7 @@ processUserInput msg = case parseInput msg of -- Parseo la entrada del usuario
                              InputBack -> do applyprettyprinter ppMessage "Going back" -- Imprime el mensaje "Going back"
                                              objectNavigationPop -- Se realiza el pop del objeto de la pila
                              -- El usuario quiere usar el objeto 
-                             InputUse -> do applyprettyprinter ppMessage "Using current object" -- Se imprime el mensaje "usando el objeto actual"
-                                            current <- objectNavigationTop  -- Extraigo el objeto actual en la pila de navegación
+                             InputUse -> do current <- objectNavigationTop  -- Extraigo el objeto actual en la pila de navegación
                                             istarget <- checkistargetBool current -- Chequeo si el objeto actual es un objetivo
                                             when istarget $ do status <- getLockStatus current -- Si es target, chequeo el status del objeto actual
                                                                when (status == VLock) $ applyprettyprinter ppMessage "It seems this object has an unlock mechanism." -- Si el status es locked, imprimo el mensaje de sugerencia "Este objeto parece que tiene un mecanismo de desbloqueo"

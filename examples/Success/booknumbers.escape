@@ -14,7 +14,7 @@ target oldbook {
 
 item scraper {
      onuse {
-        show "232"
+        show "use this number to unlock an object: 232"
      }
 
 }

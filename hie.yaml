@@ -1,0 +1,13 @@
+cradle:
+  multi:
+    # 1. Regla para ignorar Setup.hs
+    - path: "./Setup.hs"
+      config:
+        cradle:
+          none:
+
+    # 2. Regla para el resto del proyecto (src, app, etc.)
+    - path: "./"
+      config:
+        cradle:
+          stack:
