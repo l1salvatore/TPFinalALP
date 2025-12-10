@@ -7,6 +7,7 @@ import AST
 import GameStateMonad
 import GameModel
 import Control.Monad.State ()
+import Control.Monad
 
 -- El punto 2. Validación de las expresiones. Contiene diferentes checkers
 class Monad m => GameStateValidation m where
@@ -55,9 +56,18 @@ validateGameDefinition (Game elems : rest) currentobject = do
                                                                     validateElements elems  currentobject -- Valido los elementos (verifica que existan)
                                                                     validateGameDefinition rest  currentobject -- Valido recursivamente el resto de definiciones
 
-validateGameDefinition (ObjectDef _ objname decls : rest)  currentobject = do 
+validateGameDefinition (ObjectDef t objname decls : rest)  currentobject = do
                                                                             validateDeclarations decls  objname -- Valido todas las declaraciones del objeto actual
-                                                                            validateGameDefinition rest  currentobject -- Valido recursivamente el resto de definiciones
+                                                                            if t == TTarget then
+                                                                              do b <- validateHasUnlockStatement decls
+                                                                                 unless b $ throwException (objname ++ " is a target but not contains an unlock statement")
+                                                                            else validateGameDefinition rest  currentobject -- Valido recursivamente el resto de definiciones
+
+validateHasUnlockStatement :: [Declaration] -> GameState Bool
+validateHasUnlockStatement [] = return False
+validateHasUnlockStatement (Unlock _ : _) = return True
+validateHasUnlockStatement (_ : rest) = validateHasUnlockStatement rest
+
 
 -- Validación de las Declarations
 validateDeclarations :: [Declaration] ->  ObjectName -> GameState ()

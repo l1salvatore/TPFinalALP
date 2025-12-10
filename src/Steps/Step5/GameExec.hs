@@ -7,11 +7,8 @@ import GameModel
 import GameStateMonad
 import Control.Monad (when)
 import PrettyPrinter
-import Steps.Step2.ExpressionValidator
 import Steps.Step4.ObjectSentences
 import AST
-import qualified Data.Map as Map
-import qualified Data.Set as Set
 
 -- Funciones auxiliares para extraer data de los objetos
 
@@ -22,8 +19,7 @@ getelements obj = do
           itemdata' <- getObjectData obj gameenvironment
           case itemdata' of
             Just itemdata -> return (elements itemdata)
-            Nothing -> do throwException ("Unexpected Error: Object " ++ obj ++ " not found")   
-                          return Set.empty -- Esto nunca se va a ejecutar, pero lo pongo para evitar warnings
+            Nothing -> throwException ("Unexpected Error: Object " ++ obj ++ " not found")
 
 -- Los comandos de un objeto
 getusecommands :: ObjectName -> GameState [Sentence]
@@ -35,7 +31,7 @@ getusecommands obj = do
             Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
 
 -- Los códigos de desbloqueo de un objeto
-getcode     :: ObjectName -> GameState (Maybe UnlockCode)        
+getcode     :: ObjectName -> GameState (Maybe UnlockCode)
 getcode obj   = do
           gameenvironment <- getObjectEnvironment
           itemdata' <- getObjectData obj gameenvironment
@@ -44,13 +40,13 @@ getcode obj   = do
             Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
 
 -- El tipo de un objeto
-gettype     :: ObjectName -> GameState Type       
+gettype     :: ObjectName -> GameState Type
 gettype obj   = do
           gameenvironment <- getObjectEnvironment
           itemdata' <- getObjectData obj gameenvironment
           case itemdata' of
             Just itemdata -> return (objecttype itemdata)
-            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")  
+            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
 
 
 -- Empezamos con la función runGame que es un GameState ()
@@ -84,40 +80,40 @@ processUserInput msg = case parseInput msg of -- Parseo la entrada del usuario
                Nothing -> applyprettyprinter ppMessage "Invalid command" -- Comando Invalido
                Just cmd -> case cmd of -- Comando reconocido, proceso a analizar en un case al comando
                              -- El usuario quiere seleccionar un objeto
-                             InputSelect obj -> do 
+                             InputSelect obj -> do
                                                    current <- objectNavigationTop -- Extraigo el objeto actual en la pila de navegación
                                                    elements <- getelements current -- Extraigo los elementos del objeto actual
                                                    check <- isMemberOf obj elements -- Si el objeto que quiere seleccionar el usuario está entre los elementos del objeto actual, es decir, es alcanzable
-                                                   if check 
-                                                     then do 
+                                                   if check
+                                                     then do
                                                              objectNavigationPush obj -- Pusheo en la pila de navegación al objeto seleccionado, es decir, entro en el contexto del objeto seleccionado
                                                              applyprettyprinter ppSelectObject obj -- Imprimo el objeto seleccionado
                                                      else applyprettyprinter (ppUserError ObjectNotFound) obj -- Si no está el objeto, imprimo un mensaje de error "Objecto no encontrado"
                              -- El usuario ingresa un código de desbloqueo
-                             InputUnlock inputcode -> do 
+                             InputUnlock inputcode -> do
                                                          current <- objectNavigationTop -- Extraigo el objeto actual en la pila de navegación
                                                          t <- gettype current -- Chequeo si el objeto actual es un objetivo
-                                                         if (t == TTarget) then -- Si es un objetivo
-                                                                               do 
+                                                         if t == TTarget then -- Si es un objetivo
+                                                                               do
                                                                                   unlockcode <- getcode current -- Extraigo el código de este objeto actual
                                                                                   case unlockcode of -- Si el unlock code 
                                                                                         Nothing -> applyprettyprinter (ppUserError CurrentObjectNotTarget) current -- No hay codigo, entonces imprimo el error de que el objeto actual no es objetivo
                                                                                         Just requiredcode -> if inputcode == requiredcode -- Hay un código, chequeo que el input sea igual al código requerido
-                                                                                                             then do 
+                                                                                                             then do
                                                                                                                      applyprettyprinter ppUnlockObject current -- Si lo es, imprimo el mensaje de objeto desbloqueado
                                                                                                                      unlock current -- Desbloqueo el objeto
                                                                                                              else  applyprettyprinter (ppUserError IncorrectLockCode)  current -- Si no son iguales, imprimo el mensaje de código incorrecto
 
                                                          else applyprettyprinter (ppUserError CurrentObjectNotTarget) current -- Si no es un objetivo imprimo el mensaje de que el objeto actual no es un objetivo
                              -- El usuario quiere 'soltar' o navegar hacia el objeto anterior
-                             InputBack -> do 
+                             InputBack -> do
                                              applyprettyprinter ppMessage "Going back" -- Imprime el mensaje "Going back"
                                              objectNavigationPop -- Se realiza el pop del objeto de la pila
                              -- El usuario quiere usar el objeto 
-                             InputUse -> do 
+                             InputUse -> do
                                             current <- objectNavigationTop  -- Extraigo el objeto actual en la pila de navegación
                                             t <- gettype current -- Chequeo si el objeto actual es un objetivo
-                                            when (t == TTarget) $ do 
+                                            when (t == TTarget) $ do
                                                                 status <- getLockStatus current -- Si es target, chequeo el status del objeto actual
                                                                 when (status == VLock) $ applyprettyprinter ppMessage "It seems this object has an unlock mechanism." -- Si el status es locked, imprimo el mensaje de sugerencia "Este objeto parece que tiene un mecanismo de desbloqueo"
                                             sentences <- getusecommands current -- Extraigo las sentencias del objeto
@@ -127,8 +123,8 @@ processUserInput msg = case parseInput msg of -- Parseo la entrada del usuario
 
 -- Parseo del input del usuario. Simplemente hago un sepBy ' '
 parseInput :: String -> Maybe InputCommand
-parseInput input = case words input of 
-                      ["select", obj] -> Just (InputSelect obj) 
+parseInput input = case words input of
+                      ["select", obj] -> Just (InputSelect obj)
                       ["unlock", codeStr] -> case reads codeStr :: [(Int, String)] of
                                                [(code, "")] -> Just (InputUnlock code)
                                                _ -> Nothing

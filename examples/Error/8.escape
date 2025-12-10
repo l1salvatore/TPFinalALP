@@ -1,0 +1,38 @@
+
+
+game {
+    objetoA,
+    objetoB,
+    objetivoC
+}
+
+item objetoA {
+
+
+    elements {
+        objetoB
+    }
+
+    elements {
+        objetoB
+    }
+    
+    onuse {
+        show "Soy un objeto A"
+    }
+}
+
+item objetoB {
+    onuse {
+        show "Soy un objeto B"
+    }
+}
+
+target objetivoC {
+    unlock: 30
+
+    onuse {
+        if locked -> show "Soy un objetivo C, y estoy bloqueado",
+        if unlocked -> show "Soy un objetivo C, y estoy desbloqueado"
+    }
+}

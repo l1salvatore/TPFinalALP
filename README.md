@@ -55,10 +55,11 @@ TPFinalALP/
 │   └── Spec.hs                       # Pruebas unitarias
 ├── examples/                         # Archivos de ejemplo
 │   ├── Success/                      # Programas válidos
-│   │   ├── flashlight.escape
-│   │   ├── clock.escape
-│   │   ├── booknumbers.escape
-│   │   └── blockfigures.escape
+│   │   ├── flashlight.escape         # Condiciones simples con 'is locked/unlocked'
+│   │   ├── booknumbers.escape        # Condiciones 'locked/unlocked' básicas
+│   │   ├── clock.escape              # Condiciones con 'and'
+│   │   ├── blockfigures.escape       # Múltiples objetos con show
+│   │   └── completesyntax.escape     # Ejemplo completo: todas las características sintácticas
 │   └── Error/                        # Programas con errores de validación
 │       ├── badcondition.escape
 │       ├── checkinglockstatusonitem.escape
@@ -100,19 +101,27 @@ Durante la ejecución:
 
 Todos los siguientes ejemplos están correctamente estructurados y pueden ejecutarse:
 
-- **flashlight.escape**: Puzzle básico con linterna
-- **clock.escape**: Puzzle de reloj con múltiples objetos
-- **booknumbers.escape**: Búsqueda de números en libros
-- **blockfigures.escape**: Puzzle de figuras bloqueadas
+- **flashlight.escape**: Condiciones simples con `is locked` e `is unlocked`
+- **booknumbers.escape**: Condiciones básicas `locked`/`unlocked`
+- **clock.escape**: Condiciones complejas con operador `and`
+- **blockfigures.escape**: Múltiples objetos con comandos `show`
+- **levers.escape**: Ejemplo completo que cubre TODA la sintaxis del lenguaje:
+  - Condiciones con `or`
+  - Condiciones parentizadas `( condición )`
+  - Combinaciones complejas: `(c1 or c2) and c3`
+  - Todas las variantes de condiciones, declaraciones y sentencias
 
 ### Ejemplos con Errores (Error/)
 
 Estos archivos demuestran errores de validación:
 
-- **badcondition.escape**: Condiciones inválidas
-- **unknownobject.escape**: Referencia a objeto no definido
-- **unlockstatementonitem.escape**: Intento de unlock en item
-- **checkinglockstatusonitem.escape**: Revisar estado en item
+* **`1.escape`**: Uso de `unlock` en un objeto que no es `target`.
+* **`2.escape`**: Referencia a un objeto no definido.
+* **`3.escape`**: Uso de un objeto fuera de contexto (no incluido en `elements`).
+* **`4.escape`**: Uso de `locked`/`unlocked` dentro de un objeto que no es `target`.
+* **`5.escape`**: Consulta `is locked`/`is unlocked` sobre un objeto que no es `target`.
+* **`6.escape`**: Objeto `target` sin declaración de `unlock`.
+* **`7-9.escape`**: Declaraciones duplicadas.
 
 ## Dependencias
 

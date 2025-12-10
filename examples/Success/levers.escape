@@ -1,0 +1,62 @@
+target mainlock {
+    unlock: 5555
+}
+
+target lever1 {
+    unlock: 10
+}
+
+target lever2 {
+    unlock: 20
+}
+
+target lever3 {
+    unlock: 30
+}
+
+item puzzleplate {
+    elements {
+        lever1,
+        lever2,
+        lever3
+    }
+    
+    onuse {
+        show lever1,
+        show lever2,
+        show lever3,
+        if lever1 is locked -> show "Lever 1 is still locked",
+        if lever2 is locked -> show "Lever 2 is still locked",
+        if lever3 is locked -> show "Lever 3 is still locked",
+        if lever1 is unlocked or lever2 is unlocked -> show "At least one lever is unlocked!",
+        if lever1 is unlocked and lever2 is unlocked -> show "Two levers are now unlocked!",
+        if (lever1 is unlocked or lever2 is unlocked) and lever3 is locked -> show "Progress: Some levers unlocked, but lever 3 remains",
+        if (lever1 is unlocked and lever2 is unlocked and lever3 is unlocked) -> show "All levers unlocked! The code is: 5555"
+    }
+}
+
+target hint {
+    unlock: 3
+
+    onuse {
+        show "Find three levers and unlock them in sequence"
+    }
+}
+
+item book {
+    elements {
+        hint
+    }
+    
+    onuse {
+        show hint,
+        if hint is unlocked -> show "The book page reads: Try lever codes 10, 20, and 30",
+        if hint is locked -> show "The book is sealed, find a way to read it"
+    }
+}
+
+game {
+    mainlock,
+    puzzleplate,
+    book
+}

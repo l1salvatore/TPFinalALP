@@ -32,7 +32,7 @@ buildObjectData [] t _ = return (emptyObjectData t)
 -- Caso 1: Declaración de desbloqueo (Unlock)
 -- Verifica que no haya múltiples declaraciones de unlock
 -- Si n > 0, ya hay un unlock declarado previamente, por lo que lanza un error
-buildObjectData ((Unlock ncode) : xs) t (e,s,n) = if n > 0 then error "Multiple declarations of unlock"
+buildObjectData ((Unlock ncode) : xs) t (e,s,n) = if n > 0 then throwException "Multiple declarations of unlock statement"
                                                 else
                                                 do
                                                   odata <- buildObjectData xs t (e, s, n+1) -- Procesar el resto, incrementando contador de unlock
@@ -40,7 +40,7 @@ buildObjectData ((Unlock ncode) : xs) t (e,s,n) = if n > 0 then error "Multiple 
 -- Caso 2: Declaración de elementos (Elements)
 -- Verifica que no haya múltiples declaraciones de elementos
 -- Si e > 0, ya hay elementos declarados previamente, por lo que lanza un error
-buildObjectData ((Elements objList) : xs) t (e,s,n)  = if e > 0 then error "Multiple declarations of elements"
+buildObjectData ((Elements objList) : xs) t (e,s,n)  = if e > 0 then throwException "Multiple declarations of elements statement"
                                                      else
                                                      do
                                                       odata <- buildObjectData xs t (e+1,s,n) -- Procesar el resto, incrementando contador de elementos
@@ -48,7 +48,7 @@ buildObjectData ((Elements objList) : xs) t (e,s,n)  = if e > 0 then error "Mult
 -- Caso 3: Declaración de comportamiento al usar el objeto (OnUse)
 -- Verifica que no haya múltiples declaraciones de OnUse
 -- Si s > 0, ya hay un comportamiento declarado previamente, por lo que lanza un error
-buildObjectData ((OnUse onUseCode) : xs) t (e,s,n) = if s > 0 then error "Multiple declarations of onUSe"
+buildObjectData ((OnUse onUseCode) : xs) t (e,s,n) = if s > 0 then throwException "Multiple declarations of onUse statement"
                                                    else
                                                    do
                                                       odata <- buildObjectData xs t (e,s+1,n) -- Procesar el resto, incrementando contador de OnUse

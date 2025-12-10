@@ -18,7 +18,6 @@ import Stack
 import GHC.IO.Handle
 import GHC.IO.Handle.FD
 import PrettyPrinter
-import GHC.Base (when)
 
 
 -- La mónada GameState maneja el mapa de objetos (Gamma) y el estado de los objetos y navegación (Sigma)
@@ -36,7 +35,7 @@ instance Monad GameState where
 
 -- La mónada GameState es un GameStateError. Tiene una definición llamada 'throwException'
 class Monad m => GameStateError m where
-  throwException :: String -> m ()
+  throwException :: String -> m a
 
 instance GameStateError GameState where
   throwException err = GameState (lift (throwError err))
@@ -68,8 +67,6 @@ class Monad m => GameStateMonad m where
    getBlockMap :: m BlockMap
    -- Dado un mapa de bloqueos, reemplaza el mapa de bloqueos actual por este nuevo en la mónada
    putBlockMap :: BlockMap -> m ()
-   -- Dado un objeto, un estado Lock o Unlock, y un mapa de bloqueo, retorna un nuevo mapa de bloqueos con el par { objeto -> estado }
-   getNewBlockMap :: ObjectName -> BlockData -> BlockMap -> m BlockMap
    -- Obtiene la pila de navegación de objetos
    getNavigationStack :: m ObjectStack
    -- Dado una pila de navegación, reemplaza la pila de navegación actual por este nuevo en la mónada
@@ -117,8 +114,7 @@ instance GameStateNavigationStackMonad GameState where
    objectNavigationTop = do
           objectstack <- getNavigationStack
           case peek objectstack of
-            Nothing -> do throwException "Unexpected Error: Object stack is empty"
-                          return "" -- Esto nunca se va a ejecutar, pero lo pongo para evitar warnings
+            Nothing -> throwException "Unexpected Error: Object stack is empty"                        
             Just o -> return o
    objectNavigationPush o = do
           objectstack <- getNavigationStack
@@ -136,7 +132,7 @@ instance GameStateNavigationStackMonad GameState where
 
 
 
--- Definició de funciones 
+-- Definición de funciones 
 -- Estas funciones permiten manipular el estado del juego
 
 -- Dado un objeto y un entorno, devuelve la data correspondiente. O Nothing si no encuentra el objeto
@@ -172,8 +168,7 @@ getLockStatus :: ObjectName -> GameState BlockData
 getLockStatus o = do
           objectlockstate <- getBlockMap
           case Map.lookup o objectlockstate of
-            Nothing -> do throwException ("Unexpected Error: Lock status for object " ++ o ++ " not found")   
-                          return VLock -- Esto nunca se va a ejecutar, pero lo pongo para evitar warnings
+            Nothing -> throwException ("Unexpected Error: Lock status for object " ++ o ++ " not found")   
             Just status -> return status
 
 -- Verifica si todos los objetos están desbloqueados

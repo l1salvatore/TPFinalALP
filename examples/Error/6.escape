@@ -1,0 +1,29 @@
+game {
+    CajaFuerte,
+    PinturaAntigua
+}
+
+target CajaFuerte {
+    unlock: 9999
+    onuse {
+        if locked -> show "Necesito un codigo de 4 digitos. En esta caja fuerte hay 8K dolares",
+        if unlocked -> show "La caja esta abierta! Hay oro adentro."
+    }
+}
+
+target PinturaAntigua {
+    onuse {
+        if unlocked -> show Lupa,
+        show "Es un retrato de un señor con bigote. Parece mirarte fijamente."
+    }
+    
+    elements {
+        Lupa
+    }
+}
+
+item Lupa {
+    onuse {
+        show "Con la lupa veo un numero pequeño en la pintura: 9999"
+    }
+}
