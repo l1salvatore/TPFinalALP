@@ -74,11 +74,9 @@ buildEnvironment ((Game objList) :xs) = do
 -- Procesa la definición del objeto y lo agrega al entorno
 buildEnvironment ((ObjectDef typ name decls):xs) = do
                                                       odata <- buildObjectData decls typ (0,0,0) -- Construir los datos del objeto
-                                                      insertobjectdata name odata -- Insertar el objeto en el entorno de objetos
+                                                      insertObjectData name odata -- Insertar el objeto en el entorno de objetos
                                                       -- Si el objeto es un Target, inicializar su estado de bloqueo como bloqueado
-                                                      when (typ == TTarget) $ do blockmap <- getBlockMap -- Obtener mapa de bloqueos actual
-                                                                                 newblockmap <- getNewBlockMap name VLock blockmap -- Añadir nuevo target al mapa bloqueado
-                                                                                 putBlockMap newblockmap -- Actualizar mapa de bloqueos
+                                                      when (typ == TTarget) $ insertObjectAsLocked name
                                                       buildEnvironment xs -- Procesar recursivamente el resto de definiciones
 
 

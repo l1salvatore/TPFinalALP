@@ -11,35 +11,24 @@ import Control.Monad.State ()
 -- El punto 2. Validación de las expresiones. Contiene diferentes checkers
 class Monad m => GameStateValidation m where
    -- Se revisa si el objeto en cuestión es un objetivo. Si no lo es, falla
-   checkistargetException :: ObjectName -> m ()
-   -- Se revisa si el objeto en cuestión es un objetivo. Si no lo es, retorna Falso
-   checkistargetBool :: ObjectName -> m Bool
+   checkistarget :: ObjectName -> m ()
    -- Se revisa si dado un objeto e y un objeto O, el objeto e es un elemento de O. Si no lo es, falla
-   checkisaelementofException :: ObjectName -> ObjectName -> m ()
+   checkisaelementof :: ObjectName -> ObjectName -> m ()
    -- Se chequea que el objeto exista dentro del entorno. Si no lo está, falla
    checkObjectExist :: ObjectName -> m ()
 
 -- Implementación con la mónada GameState
 instance GameStateValidation GameState where
-  checkistargetBool objname = do
-                            gameenvironment <- getObjectEnvironment -- Extraigo el entorno de objetos de la mónada
-                            odata' <- getObjectData objname gameenvironment -- Extraigo la data del objeto
-                            case odata' of  -- Analizo por casos
-                              -- No existe la data, es decir, el objeto no existe
-                              Nothing -> do throwException (objname ++ " object not found") -- Lanzo el error 'El objeto no existe'
-                                            return False -- Retorno Falso
-                              -- Existe la data, chequeo si el tipo del objeto objname es Target
-                              Just odata -> if objecttype odata == TTarget then return True else return False
-  checkistargetException objname = do
+  checkistarget objname = do
                             gameenvironment <- getObjectEnvironment -- Extraigo el entorno de objetos de la mónada
                             odata' <- getObjectData objname gameenvironment -- Extraigo la data del objeto
                             case odata' of -- Analizo por casos
                               -- No existe la data, es decir, el objeto no existe
                               Nothing -> throwException (objname ++ " object not found")  -- Lanzo el error 'El objeto no existe'
                                -- Existe la data, chequeo si el tipo del objeto objname es Target
-                               -- A diferencia de la función anterior, en este caso en lugar de retornar un Bool lanzo una exception o retorno ()
+                               -- Si no es objetivo, lanzo una exception o retorno ()
                               Just odata -> if objecttype odata == TTarget then return () else throwException (objname ++ " is not a target")
-  checkisaelementofException elementname objectname = do
+  checkisaelementof elementname objectname = do
                                         gameenvironment <- getObjectEnvironment -- Extraigo el entorno de objetos de la mónada
                                         odata' <- getObjectData objectname gameenvironment -- Extraigo la data del objeto
                                         case odata' of -- Analizo por casos
@@ -74,7 +63,7 @@ validateGameDefinition (ObjectDef _ objname decls : rest)  currentobject = do
 validateDeclarations :: [Declaration] ->  ObjectName -> GameState ()
 validateDeclarations [] _ = return () -- Retorno () si la lista es vacía
 validateDeclarations (Unlock _ : rest) currentobject = do -- Viene un unlock en la lista de declaraciones
-                                                               checkistargetException currentobject -- Verificar que currentobject es un target (solo targets pueden desbloquearse)
+                                                               checkistarget currentobject -- Verificar que currentobject es un target (solo targets pueden desbloquearse)
                                                                validateDeclarations rest  currentobject -- Validar recursivamente el resto de declaraciones
 validateDeclarations (Elements elems : rest) currentobject = do -- Viene una declaración de elementos en la lista
                                                                      validateElements elems  currentobject -- Verificar que todos los elementos existen
@@ -99,19 +88,19 @@ validateCommand :: Command ->  ObjectName -> GameState ()
 validateCommand (Show (ShowObject x)) currentobject =  do
                                                                checkObjectExist x -- Verificar que el objeto a mostrar existe
                                                                checkObjectExist currentobject -- Verificar que el objeto actual existe
-                                                               checkisaelementofException x currentobject -- Verificar que x es un elemento de currentobject
+                                                               checkisaelementof x currentobject -- Verificar que x es un elemento de currentobject
 validateCommand (Show (ShowMessage _)) _ = return ()
 
 -- Validación de las Condiciones
 validateConditions :: Conditions ->  ObjectName -> GameState ()
-validateConditions Locked currentobject = checkistargetException currentobject
-validateConditions Unlocked currentobject = checkistargetException currentobject
+validateConditions Locked currentobject = checkistarget currentobject
+validateConditions Unlocked currentobject = checkistarget currentobject
 validateConditions (ObjectLocked o) currentobject = do
-                                                            checkisaelementofException o currentobject -- Verificar que o es un elemento de currentobject
-                                                            checkistargetException o -- Verificar que o es un target (solo targets pueden estar bloqueados)
+                                                            checkisaelementof o currentobject -- Verificar que o es un elemento de currentobject
+                                                            checkistarget o -- Verificar que o es un target (solo targets pueden estar bloqueados)
 validateConditions (ObjectUnlocked o) currentobject = do
-                                                              checkisaelementofException o currentobject -- Verificar que o es un elemento de currentobject
-                                                              checkistargetException o -- Verificar que o es un target (solo targets pueden estar desbloqueados)
+                                                              checkisaelementof o currentobject -- Verificar que o es un elemento de currentobject
+                                                              checkistarget o -- Verificar que o es un target (solo targets pueden estar desbloqueados)
 validateConditions (And c1 c2)  currentobject = do
                                                        validateConditions c1 currentobject -- Validar primera condición
                                                        validateConditions c2 currentobject -- Validar segunda condición

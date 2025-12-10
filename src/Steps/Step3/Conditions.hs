@@ -8,7 +8,6 @@ import GameStateMonad
 import GameModel
 import Control.Monad.State ()
 
-
 -- Evaluador de condiciones
 evalCond :: Conditions -> GameState Bool
 evalCond Locked = do current <- objectNavigationTop -- Obtengo el primer elemento de la pila (el actual de la navegación)

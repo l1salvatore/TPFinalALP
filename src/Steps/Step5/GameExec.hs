@@ -9,6 +9,47 @@ import Control.Monad (when)
 import PrettyPrinter
 import Steps.Step2.ExpressionValidator
 import Steps.Step4.ObjectSentences
+import AST
+import qualified Data.Map as Map
+
+-- Funciones auxiliares para extraer data de los objetos
+
+-- Los elementos de un objeto
+getelements :: ObjectName -> GameState Elements
+getelements obj = do
+          gameenvironment <- getObjectEnvironment
+          itemdata' <- getObjectData obj gameenvironment
+          case itemdata' of
+            Just itemdata -> return (elements itemdata)
+            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
+
+-- Los comandos de un objeto
+getusecommands :: ObjectName -> GameState [Sentence]
+getusecommands obj = do
+          gameenvironment <- getObjectEnvironment
+          itemdata' <- getObjectData obj gameenvironment
+          case itemdata' of
+            Just itemdata -> return (sentences itemdata)
+            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
+
+-- Los códigos de desbloqueo de un objeto
+getcode     :: ObjectName -> GameState (Maybe UnlockCode)        
+getcode obj   = do
+          gameenvironment <- getObjectEnvironment
+          itemdata' <- getObjectData obj gameenvironment
+          case itemdata' of
+            Just itemdata -> return (code itemdata)
+            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
+
+-- El tipo de un objeto
+gettype     :: ObjectName -> GameState Type       
+gettype obj   = do
+          gameenvironment <- getObjectEnvironment
+          itemdata' <- getObjectData obj gameenvironment
+          case itemdata' of
+            Just itemdata -> return (objecttype itemdata)
+            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")  
+
 
 -- Empezamos con la función runGame que es un GameState ()
 runGame :: GameState ()
@@ -41,34 +82,42 @@ processUserInput msg = case parseInput msg of -- Parseo la entrada del usuario
                Nothing -> applyprettyprinter ppMessage "Invalid command" -- Comando Invalido
                Just cmd -> case cmd of -- Comando reconocido, proceso a analizar en un case al comando
                              -- El usuario quiere seleccionar un objeto
-                             InputSelect obj -> do current <- objectNavigationTop -- Extraigo el objeto actual en la pila de navegación
+                             InputSelect obj -> do 
+                                                   current <- objectNavigationTop -- Extraigo el objeto actual en la pila de navegación
                                                    elements <- getelements current -- Extraigo los elementos del objeto actual
                                                    check <- isMemberOf obj elements -- Si el objeto que quiere seleccionar el usuario está entre los elementos del objeto actual, es decir, es alcanzable
                                                    if check 
-                                                     then do objectNavigationPush obj -- Pusheo en la pila de navegación al objeto seleccionado, es decir, entro en el contexto del objeto seleccionado
+                                                     then do 
+                                                             objectNavigationPush obj -- Pusheo en la pila de navegación al objeto seleccionado, es decir, entro en el contexto del objeto seleccionado
                                                              applyprettyprinter ppSelectObject obj -- Imprimo el objeto seleccionado
                                                      else applyprettyprinter (ppUserError ObjectNotFound) obj -- Si no está el objeto, imprimo un mensaje de error "Objecto no encontrado"
                              -- El usuario ingresa un código de desbloqueo
-                             InputUnlock inputcode -> do current <- objectNavigationTop -- Extraigo el objeto actual en la pila de navegación
-                                                         currentistarget <- checkistargetBool current -- Chequeo si el objeto actual es un objetivo
-                                                         if currentistarget then -- Si es un objetivo
-                                                                               do unlockcode <- getcode current -- Extraigo el código de este objeto actual
+                             InputUnlock inputcode -> do 
+                                                         current <- objectNavigationTop -- Extraigo el objeto actual en la pila de navegación
+                                                         t <- gettype current -- Chequeo si el objeto actual es un objetivo
+                                                         if (t == TTarget) then -- Si es un objetivo
+                                                                               do 
+                                                                                  unlockcode <- getcode current -- Extraigo el código de este objeto actual
                                                                                   case unlockcode of -- Si el unlock code 
                                                                                         Nothing -> applyprettyprinter (ppUserError CurrentObjectNotTarget) current -- No hay codigo, entonces imprimo el error de que el objeto actual no es objetivo
                                                                                         Just requiredcode -> if inputcode == requiredcode -- Hay un código, chequeo que el input sea igual al código requerido
-                                                                                                             then do applyprettyprinter ppUnlockObject current -- Si lo es, imprimo el mensaje de objeto desbloqueado
+                                                                                                             then do 
+                                                                                                                     applyprettyprinter ppUnlockObject current -- Si lo es, imprimo el mensaje de objeto desbloqueado
                                                                                                                      unlock current -- Desbloqueo el objeto
                                                                                                              else  applyprettyprinter (ppUserError IncorrectLockCode)  current -- Si no son iguales, imprimo el mensaje de código incorrecto
 
                                                          else applyprettyprinter (ppUserError CurrentObjectNotTarget) current -- Si no es un objetivo imprimo el mensaje de que el objeto actual no es un objetivo
                              -- El usuario quiere 'soltar' o navegar hacia el objeto anterior
-                             InputBack -> do applyprettyprinter ppMessage "Going back" -- Imprime el mensaje "Going back"
+                             InputBack -> do 
+                                             applyprettyprinter ppMessage "Going back" -- Imprime el mensaje "Going back"
                                              objectNavigationPop -- Se realiza el pop del objeto de la pila
                              -- El usuario quiere usar el objeto 
-                             InputUse -> do current <- objectNavigationTop  -- Extraigo el objeto actual en la pila de navegación
-                                            istarget <- checkistargetBool current -- Chequeo si el objeto actual es un objetivo
-                                            when istarget $ do status <- getLockStatus current -- Si es target, chequeo el status del objeto actual
-                                                               when (status == VLock) $ applyprettyprinter ppMessage "It seems this object has an unlock mechanism." -- Si el status es locked, imprimo el mensaje de sugerencia "Este objeto parece que tiene un mecanismo de desbloqueo"
+                             InputUse -> do 
+                                            current <- objectNavigationTop  -- Extraigo el objeto actual en la pila de navegación
+                                            t <- gettype current -- Chequeo si el objeto actual es un objetivo
+                                            when (t == TTarget) $ do 
+                                                                status <- getLockStatus current -- Si es target, chequeo el status del objeto actual
+                                                                when (status == VLock) $ applyprettyprinter ppMessage "It seems this object has an unlock mechanism." -- Si el status es locked, imprimo el mensaje de sugerencia "Este objeto parece que tiene un mecanismo de desbloqueo"
                                             sentences <- getusecommands current -- Extraigo las sentencias del objeto
                                             execute sentences -- Ejecuto las sentencias
 
