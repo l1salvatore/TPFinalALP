@@ -117,7 +117,8 @@ instance GameStateNavigationStackMonad GameState where
    objectNavigationTop = do
           objectstack <- getNavigationStack
           case peek objectstack of
-            Nothing -> error "Unexpected Error: Object stack is empty"
+            Nothing -> do throwException "Unexpected Error: Object stack is empty"
+                          return "" -- Esto nunca se va a ejecutar, pero lo pongo para evitar warnings
             Just o -> return o
    objectNavigationPush o = do
           objectstack <- getNavigationStack
@@ -171,7 +172,8 @@ getLockStatus :: ObjectName -> GameState BlockData
 getLockStatus o = do
           objectlockstate <- getBlockMap
           case Map.lookup o objectlockstate of
-            Nothing -> error ("Unexpected Error: Lock status for object " ++ o ++ " not found")
+            Nothing -> do throwException ("Unexpected Error: Lock status for object " ++ o ++ " not found")   
+                          return VLock -- Esto nunca se va a ejecutar, pero lo pongo para evitar warnings
             Just status -> return status
 
 -- Verifica si todos los objetos están desbloqueados

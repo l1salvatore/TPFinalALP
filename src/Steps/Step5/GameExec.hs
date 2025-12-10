@@ -11,6 +11,7 @@ import Steps.Step2.ExpressionValidator
 import Steps.Step4.ObjectSentences
 import AST
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 
 -- Funciones auxiliares para extraer data de los objetos
 
@@ -21,7 +22,8 @@ getelements obj = do
           itemdata' <- getObjectData obj gameenvironment
           case itemdata' of
             Just itemdata -> return (elements itemdata)
-            Nothing -> error ("Unexpected Error: Object " ++ obj ++ " not found")
+            Nothing -> do throwException ("Unexpected Error: Object " ++ obj ++ " not found")   
+                          return Set.empty -- Esto nunca se va a ejecutar, pero lo pongo para evitar warnings
 
 -- Los comandos de un objeto
 getusecommands :: ObjectName -> GameState [Sentence]
