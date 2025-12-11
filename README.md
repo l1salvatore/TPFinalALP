@@ -59,12 +59,17 @@ TPFinalALP/
 │   │   ├── booknumbers.escape        # Condiciones 'locked/unlocked' básicas
 │   │   ├── clock.escape              # Condiciones con 'and'
 │   │   ├── blockfigures.escape       # Múltiples objetos con show
-│   │   └── completesyntax.escape     # Ejemplo completo: todas las características sintácticas
+│   │   └── levers.escape     # Ejemplo completo: todas las características sintácticas
 │   └── Error/                        # Programas con errores de validación
-│       ├── badcondition.escape
-│       ├── checkinglockstatusonitem.escape
-│       ├── unknownobject.escape
-│       └── unlockstatementonitem.escape
+│       ├── 1.escape                  # Uso de unlock en un objeto que no es target.
+│       ├── 2.escape                  # Referencia a un objeto no definido.
+│       ├── 3.escape                  # Uso de un objeto fuera de contexto (no incluido en elements).
+│       └── 4.escape                  # Uso de `ocked/unlocked dentro de un objeto que no es target.
+│       └── 5.escape                  # Consulta is locked/is unlocked sobre un objeto que no es target.
+│       └── 6.escape                  # Objeto target sin declaración de unlock.
+│       └── 7.escape                  # Declaración duplicada de onuse
+│       └── 8.escape                  # Declaración duplicada de elements
+│       └── 9.escape                  # Declaración duplicada de unlock
 ├── EscapeDSL.cabal                   # Configuración Cabal
 ├── package.yaml                      # Configuración Stack
 ├── stack.yaml                        # Resolución de dependencias
